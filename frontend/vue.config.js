@@ -2,7 +2,7 @@
 module.exports = {
     // 部署应用包时的基本 URL
     // 开发时使用 '/'，部署时使用 '/arknights-wordle/'
-    publicPath: process.env.NODE_ENV === 'production' ? '/arknights-wordle/' : '/',
+    publicPath: process.env.NODE_ENV === 'production' ? '/arknights-wordle-202606/' : '/',
     
     // 多页面应用配置
     pages: {
