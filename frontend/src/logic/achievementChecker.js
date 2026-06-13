@@ -112,7 +112,7 @@ export class AchievementChecker {
 
   // 检查是否是阿戈尔
   isAegir(operator) {
-    return operator.种族 === '阿戈尔' || operator.国家 === '阿戈尔';
+    return operator.种族 === '阿戈尔' || operator.阵营 === '阿戈尔';
   }
 
   // 检查速度猜测成就

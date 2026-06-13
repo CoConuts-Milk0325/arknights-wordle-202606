@@ -242,7 +242,7 @@ export default {
         },
         {
           label: '阵营',
-          value: () => targetOperator?.国家 || '?',
+          value: () => targetOperator?.阵营 || '?',
           shouldShow: () => true
         },
         {

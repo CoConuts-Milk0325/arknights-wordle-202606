@@ -270,8 +270,8 @@ export default {
           shouldShow: () => true
         },
         {
-          label: '国籍',
-          value: () => props.targetOperator?.国家 || '?',
+          label: '阵营',
+          value: () => props.targetOperator?.阵营 || '?',
           shouldShow: () => true
         },
         {
@@ -292,7 +292,7 @@ export default {
         {
           label: '出生地',
           value: () => props.targetOperator?.出生地 || '?',
-          shouldShow: () => props.targetOperator?.出生地 && props.targetOperator.出生地 !== props.targetOperator.国家
+          shouldShow: () => props.targetOperator?.出生地 && props.targetOperator.出生地 !== props.targetOperator.阵营
         }
       ];
 
