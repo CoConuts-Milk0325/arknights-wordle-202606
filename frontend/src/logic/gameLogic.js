@@ -61,9 +61,9 @@ export function preprocessOperators(data) {
 
     // 解析上线年份，只取年份
     if (op.上线时间) {
-      const dateObj = new Date(op.上线时间);
-      if (!isNaN(dateObj)) {
-        op.上线年份 = dateObj.getFullYear();
+      const match = op.上线时间.match(/(\d{4})年/);
+      if (match) {
+        op.上线年份 = parseInt(match[1], 10);
       }
     }
   });
