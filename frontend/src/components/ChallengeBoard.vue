@@ -74,18 +74,27 @@
               </div>
             </div>
             
-            <div class="param-item">
-              <label class="param-label">难度设置</label>
-              <div class="toggle-group">
-                <button 
-                  class="toggle-option" 
-                  :class="{ active: challengeSettings.onlySixStar }"
-                  @click="challengeSettings.onlySixStar = !challengeSettings.onlySixStar"
-                >
-                  只猜六星
-                </button>
-              </div>
+          </div>
+        </div>
+
+        <!-- 星级筛选（单独一行） -->
+        <div class="setup-section">
+          <h3 class="section-title">星级筛选</h3>
+          <div class="star-filter-controls">
+            <div class="star-filter-presets">
+              <button :class="['preset-btn', { active: challengeSettings.starPreset === 'all' }]" @click="applyChallengeStarPreset('all')">全部</button>
+              <button :class="['preset-btn', { active: challengeSettings.starPreset === 'six' }]" @click="applyChallengeStarPreset('six')">仅六星</button>
+              <button :class="['preset-btn', { active: challengeSettings.starPreset === 'fivePlus' }]" @click="applyChallengeStarPreset('fivePlus')">五星+</button>
             </div>
+            <div class="star-filter-chips">
+              <button
+                v-for="(_, index) in challengeSettings.starFilter" :key="index"
+                :class="['star-chip', { active: challengeSettings.starFilter[index] }]"
+                :style="{ '--star-color': rarityColors[String(index + 1)] }"
+                @click="toggleChallengeStar(index)"
+              >{{ index + 1 }}★</button>
+            </div>
+            <div class="star-filter-status" :class="{ empty: challengeStarFilterText.includes('未选中') }">{{ challengeStarFilterText }}</div>
           </div>
         </div>
 
@@ -244,6 +253,7 @@ import { generateChallengeQuestions, calculateChallengeScore } from '../logic/ch
 import { compareOperators } from '../logic/gameLogic';
 import { achievementChecker } from '../logic/achievementChecker';
 import { achievementEmitter } from '../utils/achievementEmitter';
+import { RARITY_COLORS } from '../config/constants';
 import ChallengeResult from './ChallengeResult.vue';
 import ChallengeGameWrapper from './ChallengeGameWrapper.vue';
 
@@ -271,16 +281,40 @@ export default {
   setup(props, { emit }) {
     // 挑战状态
     const challengePhase = ref('setup'); // setup, preparing, playing, result
+    const rarityColors = RARITY_COLORS;
+
     const challengeSettings = ref({
       gameMode: 'easy',
       questionCount: 5,
       timePerQuestion: 300, // 默认无限制
       maxGuesses: 6,
-      onlySixStar: false,
+      starFilter: [true, true, true, true, true, true],
+      starPreset: 'all',
       // 模式特有设置
       potentialMode: '满潜',
       trustMode: '满信赖',
       puzzleHintInterval: 3
+    });
+
+    function applyChallengeStarPreset(preset) {
+      challengeSettings.value.starPreset = preset;
+      if (preset === 'all') challengeSettings.value.starFilter = [true, true, true, true, true, true];
+      else if (preset === 'six') challengeSettings.value.starFilter = [false, false, false, false, false, true];
+      else if (preset === 'fivePlus') challengeSettings.value.starFilter = [false, false, false, false, true, true];
+    }
+
+    function toggleChallengeStar(index) {
+      challengeSettings.value.starFilter[index] = !challengeSettings.value.starFilter[index];
+      challengeSettings.value.starPreset = null;
+    }
+
+    const challengeStarFilterText = computed(() => {
+      const sf = challengeSettings.value.starFilter;
+      const selected = [];
+      sf.forEach((v, i) => { if (v) selected.push(`${i + 1}星`); });
+      if (selected.length === 6) return '当前选中: 全部星级';
+      if (selected.length === 0) return '当前未选中任何星级';
+      return `当前选中: ${selected.join(', ')}`;
     });
 
     // 游戏状态
@@ -615,7 +649,12 @@ export default {
       getModeDisplayName,
       formatTime,
       formatTotalTime,
-      totalChallengeTime
+      totalChallengeTime,
+      // 星级筛选
+      applyChallengeStarPreset,
+      toggleChallengeStar,
+      challengeStarFilterText,
+      rarityColors
     };
   }
 };

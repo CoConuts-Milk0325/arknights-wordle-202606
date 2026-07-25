@@ -62,7 +62,6 @@
 
 <script>
 import { computed } from 'vue';
-import { filterByOnlySixStar } from '../logic/gameLogic';
 import GuessInput from './GuessInput.vue';
 import GameBoard from './GameBoard.vue';
 import PuzzleBoard from './PuzzleBoard.vue';
@@ -112,10 +111,12 @@ export default {
   setup(props, { emit }) {
     // 过滤干员
     const filteredOperators = computed(() => {
-      if (props.settings.onlySixStar) {
-        return filterByOnlySixStar(props.operators);
-      }
-      return props.operators;
+      const sf = props.settings.starFilter;
+      if (!sf || sf.every(Boolean)) return props.operators;
+      return props.operators.filter(op => {
+        const star = (parseInt(op.稀有度, 10) || 0) + 1;
+        return sf[star - 1];
+      });
     });
 
     // 处理猜测

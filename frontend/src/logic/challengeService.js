@@ -13,12 +13,16 @@ import { imagePreloader } from '../utils/imagePreloader';
  * @returns {Promise<Array>} 题目列表
  */
 export async function generateChallengeQuestions(operators, settings, progressCallback = () => {}) {
-  const { gameMode, questionCount, onlySixStar } = settings;
-  
-  // 过滤干员
-  const availableOperators = onlySixStar 
-    ? operators.filter(op => op.星级 === 6)
-    : operators;
+  const { gameMode, questionCount, starFilter } = settings;
+
+  // 星级筛选
+  let availableOperators = operators;
+  if (starFilter && !starFilter.every(Boolean)) {
+    availableOperators = operators.filter(op => {
+      const star = (parseInt(op.稀有度, 10) || 0) + 1;
+      return starFilter[star - 1];
+    });
+  }
     
   if (availableOperators.length < questionCount) {
     throw new Error(`可用干员数量不足，需要 ${questionCount} 个，但只有 ${availableOperators.length} 个`);
@@ -135,8 +139,10 @@ export function calculateChallengeScore(isCorrect, timeUsed, guessCount, setting
   // 猜测次数奖励（猜测次数越少，奖励越高）
   const guessBonus = Math.floor(((maxGuesses - guessCount + 1) / maxGuesses) * 400);
   
-  // 六星限制奖励
-  const sixStarBonus = settings.onlySixStar ? 150 : 0;
+  // 六星限制奖励（仅选中6星时加分）
+  const isOnlySixStar = settings.starFilter &&
+    settings.starFilter.every((v, i) => i === 5 ? v : !v);
+  const sixStarBonus = isOnlySixStar ? 150 : 0;
   
   // 一击必中奖励
   const perfectBonus = guessCount === 1 ? 300 : 0;
@@ -267,7 +273,7 @@ export function generateShareCode(challengeData) {
     q: settings.questionCount, // 题目数量
     t: settings.timePerQuestion, // 单题时间
     g: settings.maxGuesses, // 最大猜测次数
-    s: settings.onlySixStar ? 1 : 0, // 六星限制
+    s: (settings.starFilter && settings.starFilter.every((v, i) => i === 5 ? v : !v)) ? 1 : 0, // 六星限制
     // 可以选择是否包含具体题目
     // targets: results.map(r => r.targetOperator.干员)
   };
@@ -310,7 +316,7 @@ export function parseShareCode(shareCode) {
       questionCount: shareData.q,
       timePerQuestion: shareData.t,
       maxGuesses: shareData.g,
-      onlySixStar: shareData.s === 1,
+      starFilter: shareData.s === 1 ? [false, false, false, false, false, true] : [true, true, true, true, true, true],
       targets: shareData.targets || null
     };
   } catch (error) {

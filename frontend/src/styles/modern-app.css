@@ -655,6 +655,140 @@ a:active {
   }
 }
 
+/* 星级筛选 — 默认（设置面板） */
+.star-filter-item {
+  min-height: auto !important;
+  padding: 0.75rem !important;
+}
+
+.star-filter-item .setting-label {
+  font-size: 0.9rem;
+}
+
+.star-filter-item .setting-desc {
+  font-size: 0.8rem;
+}
+
+.star-filter-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+}
+
+.star-filter-presets {
+  display: flex;
+  gap: 8px;
+  width: 100%;
+}
+
+.star-filter-presets .preset-btn {
+  flex: 1;
+  padding: 10px 8px;
+  border-radius: 8px;
+  border: 2px solid rgba(255,255,255,0.15);
+  background: transparent;
+  color: var(--color-text);
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+  opacity: 0.7;
+  text-align: center;
+  font-weight: 600;
+}
+
+.star-filter-presets .preset-btn:hover {
+  opacity: 1;
+  background: rgba(255,255,255,0.08);
+}
+
+.star-filter-presets .preset-btn.active {
+  opacity: 1;
+  background: rgba(52, 152, 219, 0.25);
+  border-color: var(--color-primary);
+  box-shadow: 0 0 8px rgba(52, 152, 219, 0.2);
+}
+
+.star-filter-chips {
+  display: flex;
+  gap: 8px;
+  width: 100%;
+  justify-content: space-between;
+}
+
+.star-chip {
+  flex: 1;
+  height: 40px;
+  border-radius: 8px;
+  border: 2px solid rgba(255,255,255,0.15);
+  background: transparent;
+  color: var(--color-text);
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+  opacity: 0.3;
+  text-align: center;
+  min-width: 0;
+  line-height: 40px;
+}
+
+.star-chip:hover {
+  opacity: 0.6;
+  background: rgba(255,255,255,0.05);
+}
+
+.star-chip.active {
+  opacity: 1;
+  border-color: var(--star-color, var(--color-primary));
+  background: color-mix(in srgb, var(--star-color, var(--color-primary)) 25%, transparent);
+  box-shadow: 0 0 12px color-mix(in srgb, var(--star-color, var(--color-primary)) 30%, transparent);
+}
+
+.star-filter-status {
+  font-size: 13px;
+  color: var(--color-text);
+  opacity: 0.6;
+  margin-top: 4px;
+  text-align: center;
+}
+
+.star-filter-status.empty {
+  color: #e74c3c;
+  opacity: 1;
+}
+
+/* 星级筛选 — 挑战模式（单独区域，更大） */
+.setup-section .star-filter-controls {
+  gap: 14px;
+}
+
+.setup-section .star-filter-presets {
+  gap: 14px;
+}
+
+.setup-section .star-filter-presets .preset-btn {
+  padding: 16px 12px;
+  border-radius: 12px;
+  font-size: 17px;
+}
+
+.setup-section .star-filter-chips {
+  gap: 14px;
+}
+
+.setup-section .star-chip {
+  height: 60px;
+  border-radius: 12px;
+  font-size: 20px;
+  line-height: 60px;
+}
+
+.setup-section .star-filter-status {
+  font-size: 15px;
+  margin-top: 8px;
+}
+
 /* 现代化开关 */
 .modern-switch {
   position: relative;

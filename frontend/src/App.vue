@@ -117,15 +117,27 @@
               <transition name="slide-down">
                 <div v-if="showAdvanced" class="settings-content">
                   <div class="setting-group">
-                    <div class="setting-item">
+                    <div class="setting-item star-filter-item">
                       <div class="setting-info">
-                        <label class="setting-label">只猜六星干员</label>
-                        <span class="setting-desc">限制猜测范围为6星干员</span>
+                        <label class="setting-label">星级筛选</label>
+                        <span class="setting-desc">选择要猜测的干员星级范围</span>
                       </div>
-                      <label class="modern-switch">
-                        <input type="checkbox" v-model="onlySixStar" />
-                        <span class="switch-slider"></span>
-                      </label>
+                      <div class="star-filter-controls">
+                        <div class="star-filter-presets">
+                          <button :class="['preset-btn', { active: starPreset === 'all' }]" @click="applyStarPreset('all')">全部</button>
+                          <button :class="['preset-btn', { active: starPreset === 'six' }]" @click="applyStarPreset('six')">仅六星</button>
+                          <button :class="['preset-btn', { active: starPreset === 'fivePlus' }]" @click="applyStarPreset('fivePlus')">五星+</button>
+                        </div>
+                        <div class="star-filter-chips">
+                          <button
+                            v-for="(_, index) in starFilter" :key="index"
+                            :class="['star-chip', { active: starFilter[index] }]"
+                            :style="{ '--star-color': RARITY_COLORS[String(index + 1)] }"
+                            @click="toggleStar(index)"
+                          >{{ index + 1 }}★</button>
+                        </div>
+                        <div class="star-filter-status" :class="{ empty: starFilterText.includes('未选中') }">{{ starFilterText }}</div>
+                      </div>
                     </div>
 
                     <div class="setting-item">
@@ -178,15 +190,27 @@
               <transition name="slide-down">
                 <div v-if="showAdvanced" class="settings-content">
                   <div class="setting-group">
-                    <div class="setting-item">
+                    <div class="setting-item star-filter-item">
                       <div class="setting-info">
-                        <label class="setting-label">只猜六星干员</label>
-                        <span class="setting-desc">限制猜测范围为6星干员</span>
+                        <label class="setting-label">星级筛选</label>
+                        <span class="setting-desc">选择要猜测的干员星级范围</span>
                       </div>
-                      <label class="modern-switch">
-                        <input type="checkbox" v-model="onlySixStar" />
-                        <span class="switch-slider"></span>
-                      </label>
+                      <div class="star-filter-controls">
+                        <div class="star-filter-presets">
+                          <button :class="['preset-btn', { active: starPreset === 'all' }]" @click="applyStarPreset('all')">全部</button>
+                          <button :class="['preset-btn', { active: starPreset === 'six' }]" @click="applyStarPreset('six')">仅六星</button>
+                          <button :class="['preset-btn', { active: starPreset === 'fivePlus' }]" @click="applyStarPreset('fivePlus')">五星+</button>
+                        </div>
+                        <div class="star-filter-chips">
+                          <button
+                            v-for="(_, index) in starFilter" :key="index"
+                            :class="['star-chip', { active: starFilter[index] }]"
+                            :style="{ '--star-color': RARITY_COLORS[String(index + 1)] }"
+                            @click="toggleStar(index)"
+                          >{{ index + 1 }}★</button>
+                        </div>
+                        <div class="star-filter-status" :class="{ empty: starFilterText.includes('未选中') }">{{ starFilterText }}</div>
+                      </div>
                     </div>
 
                     <div v-if="selectedTagGroup.id !== 'easy'" class="setting-item">
@@ -352,7 +376,6 @@ import AchievementToast from './components/AchievementToast.vue';
 import { loadOperatorsData } from './utils/dataLoader';
 import {
   preprocessOperators,
-  filterByOnlySixStar,
   selectRandomOperator,
   compareOperators
 } from './logic/gameLogic';
@@ -365,6 +388,7 @@ import { InputValidator } from './utils/validator';
 import { imagePreloader } from './utils/imagePreloader';
 import { getImagePath } from './utils/imageUtils';
 import { getAvailableArts } from './logic/puzzleService';
+import { RARITY_COLORS } from './config/constants';
 
 export default {
   name: 'App',
@@ -393,7 +417,9 @@ export default {
     const potentialMode = ref('满潜');
     const trustMode = ref('满信赖');
     const userGaveUp = ref(false);
-    const onlySixStar = ref(false);
+    // 星级筛选 [1★, 2★, 3★, 4★, 5★, 6★]
+    const starFilter = ref([true, true, true, true, true, true]);
+    const starPreset = ref('all'); // 'all' | 'six' | 'fivePlus' | null
     const puzzleHintInterval = ref(3); // 小头模式提示间隔
 
     const tagGroups = ref([
@@ -426,10 +452,31 @@ export default {
     const themeText = computed(() => (currentTheme.value === 'dark' ? '浅色模式' : '深色模式'));
 
     const filteredOperators = computed(() => {
-      if (onlySixStar.value) {
-        return filterByOnlySixStar(operatorData.value);
-      }
-      return operatorData.value;
+      if (starFilter.value.every(Boolean)) return operatorData.value;
+      return operatorData.value.filter(op => {
+        const star = (parseInt(op.稀有度, 10) || 0) + 1;
+        return starFilter.value[star - 1];
+      });
+    });
+
+    function applyStarPreset(preset) {
+      starPreset.value = preset;
+      if (preset === 'all') starFilter.value = [true, true, true, true, true, true];
+      else if (preset === 'six') starFilter.value = [false, false, false, false, false, true];
+      else if (preset === 'fivePlus') starFilter.value = [false, false, false, false, true, true];
+    }
+
+    function toggleStar(index) {
+      starFilter.value[index] = !starFilter.value[index];
+      starPreset.value = null;
+    }
+
+    const starFilterText = computed(() => {
+      const selected = [];
+      starFilter.value.forEach((v, i) => { if (v) selected.push(`${i + 1}星`); });
+      if (selected.length === 6) return '当前选中: 全部星级';
+      if (selected.length === 0) return '当前未选中任何星级';
+      return `当前选中: ${selected.join(', ')}`;
     });
 
     const selectTagGroup = (groupId) => {
@@ -486,8 +533,14 @@ export default {
     const initFromCookies = () => {
       const settings = loadSettings();
       if (settings) {
-        if (typeof settings.onlySixStar === 'boolean') {
-          onlySixStar.value = settings.onlySixStar;
+        if (settings.starFilter && Array.isArray(settings.starFilter)) {
+          starFilter.value = settings.starFilter;
+        } else if (typeof settings.onlySixStar === 'boolean') {
+          // 旧 cookie 迁移
+          if (settings.onlySixStar) {
+            starFilter.value = [false, false, false, false, false, true];
+            starPreset.value = 'six';
+          }
         }
         if (typeof settings.maxGuesses === 'number') {
           maxGuesses.value = settings.maxGuesses;
@@ -512,7 +565,7 @@ export default {
 
     watch(
       [
-        onlySixStar,
+        starFilter,
         maxGuesses,
         selectedTagGroup,
         potentialMode,
@@ -526,9 +579,14 @@ export default {
       { deep: true }
     );
 
+    // 监听星级筛选改变，自动重新开局
+    watch(starFilter, () => {
+      resetGame();
+    }, { deep: true });
+
     const saveToCookies = () => {
       const settings = {
-        onlySixStar: onlySixStar.value,
+        starFilter: starFilter.value,
         maxGuesses: maxGuesses.value,
         selectedTagGroupId: selectedTagGroup.value.id,
         potentialMode: potentialMode.value,
@@ -539,11 +597,6 @@ export default {
       // 主题
       setTheme(currentTheme.value);
     };
-
-    // 监听 onlySixStar 改变，自动重新开局
-    watch(onlySixStar, () => {
-      resetGame();
-    });
 
     const showToast = (message, type = 'error') => {
       const toast = { id: Date.now(), message, type };
@@ -727,7 +780,12 @@ export default {
       potentialMode,
       trustMode,
       userGaveUp,
-      onlySixStar,
+      starFilter,
+      starPreset,
+      applyStarPreset,
+      toggleStar,
+      starFilterText,
+      RARITY_COLORS,
 
       tagGroups,
       selectedTagGroup,

@@ -79,13 +79,6 @@ export function selectRandomOperator(operators) {
 }
 
 /**
- * 根据 onlySixStar 筛选
- */
-export function filterByOnlySixStar(operators) {
-  return operators.filter(op => op.星级 === 6);
-}
-
-/**
  * 获取干员数值在潜能/信赖影响下的有效值
  */
 export function getEffectiveValue(op, tag, potentialMode, trustMode) {
