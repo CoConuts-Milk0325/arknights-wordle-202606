@@ -41,7 +41,8 @@
 
     <!-- 图像区域 + 加载状态 -->
     <div ref="containerRef" class="image-area" :class="{ loading: loadingImage }">
-      <canvas ref="canvasRef" class="puzzle-canvas" />
+      <canvas v-show="!showFullImage" ref="canvasRef" class="puzzle-canvas" />
+      <img v-show="showFullImage" v-if="artUrl" :src="artUrl" :alt="targetOperator?.干员" class="full-image" />
       <div v-if="loadingImage" class="image-loading-indicator">
         <div class="loading-content">
           <div class="loading-spinner"></div>
@@ -204,6 +205,10 @@ export default {
       return Math.max(1, maxZoom - wrongGuessCount.value * step);
     });
 
+    const showFullImage = computed(() =>
+      props.gameWon || props.gameOver || props.userGaveUp
+    );
+
     const visiblePercent = computed(() => {
       if (props.gameWon || props.gameOver || props.userGaveUp) return 100;
       const z = imageZoom.value;
@@ -224,13 +229,8 @@ export default {
       const ch = canvasSize.value.h;
       const zoom = imageZoom.value;
 
-      // 全图模式
-      if (props.gameWon || props.gameOver || props.userGaveUp) {
-        ctx.clearRect(0, 0, cw, ch);
-        const fitScale = Math.min(cw / iw, ch / ih);
-        ctx.drawImage(img, 0, 0, iw, ih, (cw - iw * fitScale) / 2, (ch - ih * fitScale) / 2, iw * fitScale, ih * fitScale);
-        return;
-      }
+      // 全图模式由 img 标签显示，canvas 不处理
+      if (showFullImage.value) return;
 
       // 固定窗口：居中占画布 60%
       const winW = cw * 0.6;
@@ -312,6 +312,8 @@ export default {
       if (canvas) {
         canvas.width = canvasSize.value.w;
         canvas.height = canvasSize.value.h;
+        canvas.style.width = canvasSize.value.w + 'px';
+        canvas.style.height = canvasSize.value.h + 'px';
       }
     }
 
@@ -334,6 +336,7 @@ export default {
       containerRef,
       imageZoom,
       visiblePercent,
+      showFullImage,
       displayedHints,
       puzzleHints,
       artUrl: artUrl,
@@ -467,8 +470,13 @@ export default {
 
 .puzzle-canvas {
   display: block;
+}
+
+.full-image {
+  display: block;
   width: 100%;
   height: auto;
+  border-radius: 12px;
 }
 
 /* 已猜干员列表（照搬小头模式） */
