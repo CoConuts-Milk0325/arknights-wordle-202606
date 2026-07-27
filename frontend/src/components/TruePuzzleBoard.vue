@@ -65,8 +65,8 @@
       </div>
     </div>
 
-    <!-- 重新开始按钮 -->
-    <div class="game-controls">
+    <!-- 重新开始按钮（挑战模式不显示） -->
+    <div v-if="!isChallenge" class="game-controls">
       <button v-if="gameOver || gameWon || userGaveUp" @click="$emit('reset')" class="reset-button">
         重新开始
       </button>
@@ -99,6 +99,10 @@ export default {
         gameOverMessage: '游戏结束！',
         giveUpMessage: '你已放弃游戏！'
       })
+    },
+    isChallenge: {
+      type: Boolean,
+      default: false
     }
   },
   emits: ['reset'],
@@ -113,6 +117,7 @@ export default {
     const wrongGuessCount = ref(0);
     const loaded = ref(false);
     const canvasSize = ref({ w: 500, h: 500 });
+    const contentAreas = ref([[0.2, 0.2, 0.2, 0.2], [0.4, 0.2, 0.2, 0.2], [0.6, 0.2, 0.2, 0.2], [0.2, 0.4, 0.2, 0.2], [0.4, 0.4, 0.2, 0.2], [0.6, 0.4, 0.2, 0.2], [0.2, 0.6, 0.2, 0.2], [0.4, 0.6, 0.2, 0.2], [0.6, 0.6, 0.2, 0.2]]);
 
     // 图像显示尺寸（自适应）
 
@@ -181,6 +186,9 @@ export default {
       loadedImage.value = img;
       loaded.value = true;
 
+      // 初始化裁切区域
+      scanContentAreas();
+
       loadingStatus.value = '正在初始化...';
       loadingProgress.value = 80;
 
@@ -193,6 +201,16 @@ export default {
       // 短暂显示完成状态后隐藏加载指示器
       await new Promise(r => setTimeout(r, 200));
       loadingImage.value = false;
+    }
+
+    // 预定义有内容的裁切区域（CDN 跨域限制无法扫描像素）
+    function scanContentAreas() {
+      // 5x5 网格中角色通常占据的格子（中心区域）
+      contentAreas.value = [
+        [0.2, 0.2, 0.2, 0.2], [0.4, 0.2, 0.2, 0.2], [0.6, 0.2, 0.2, 0.2],
+        [0.2, 0.4, 0.2, 0.2], [0.4, 0.4, 0.2, 0.2], [0.6, 0.4, 0.2, 0.2],
+        [0.2, 0.6, 0.2, 0.2], [0.4, 0.6, 0.2, 0.2], [0.6, 0.6, 0.2, 0.2],
+      ];
     }
 
     // ========== 渲染：固定窗口 + 图片缩放（不变形） ==========
@@ -208,13 +226,6 @@ export default {
     const showFullImage = computed(() =>
       props.gameWon || props.gameOver || props.userGaveUp
     );
-
-    const visiblePercent = computed(() => {
-      if (props.gameWon || props.gameOver || props.userGaveUp) return 100;
-      const z = imageZoom.value;
-      // 窗口占画布 60%，可见比例 ≈ (0.6/zoom)^2 * 100
-      return Math.round(36 / (z * z));
-    });
 
     function renderCanvas() {
       const canvas = canvasRef.value;
@@ -238,14 +249,13 @@ export default {
       const winX = (cw - winW) / 2;
       const winY = (ch - winH) / 2;
 
-      // 随机裁剪中心点（种子固定，一局内不变）
+      // 从有内容的区域中随机选裁剪中心
       const seed = hashStr(props.targetOperator.干员 + '_' + props.gameSessionId);
-      const biased = (v) => {
-        const b = v < 0.5 ? 0.5 * Math.pow(v * 2, 0.55) : 1 - 0.5 * Math.pow((1 - v) * 2, 0.55);
-        return 0.15 + b * 0.7;
-      };
-      const cx = biased((seed % 997) / 997);
-      const cy = biased(((seed >> 4) % 997) / 997);
+      const randVal = (n) => ((seed >> (n * 8)) ^ (n * 12345)) / 2147483647;
+      const idx = Math.floor(Math.abs(randVal(0)) * contentAreas.value.length);
+      const area = contentAreas.value[Math.min(idx, contentAreas.value.length - 1)];
+      const cx = area[0] + (randVal(1) - Math.floor(randVal(1))) * area[2];
+      const cy = area[1] + (randVal(2) - Math.floor(randVal(2))) * area[3];
 
       // 图片适配画布的尺寸
       const fitScale = Math.min(cw / iw, ch / ih);
@@ -335,7 +345,6 @@ export default {
       canvasRef,
       containerRef,
       imageZoom,
-      visiblePercent,
       showFullImage,
       displayedHints,
       puzzleHints,
@@ -345,7 +354,8 @@ export default {
       loadingStatus,
       loadingProgress,
       canvasSize,
-      getOperatorAvatar
+      getOperatorAvatar,
+      contentAreas
     };
   }
 };

@@ -307,7 +307,7 @@
             <!-- 挑战模式 -->
             <challenge-board
               v-if="isInChallengeMode"
-              :operators="filteredOperators"
+              :operators="operatorData"
               :available-modes="tagGroups"
               @back="exitChallengeMode"
               class="board-component"

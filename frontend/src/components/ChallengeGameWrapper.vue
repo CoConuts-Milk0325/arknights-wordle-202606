@@ -11,18 +11,6 @@
       />
     </div>
 
-    <!-- 游戏结果显示 -->
-    <div v-if="gameWon || gameOver" class="challenge-result-mini">
-      <div v-if="gameWon" class="result-success">
-        <span class="result-icon">🎉</span>
-        <span class="result-text">正确！答案是 {{ question.targetOperator.干员 }}</span>
-      </div>
-      <div v-else class="result-fail">
-        <span class="result-icon">😞</span>
-        <span class="result-text">时间到！答案是 {{ question.targetOperator.干员 }}</span>
-      </div>
-    </div>
-
     <!-- 游戏板 -->
     <div v-if="settings.gameMode === 'puzzle'" class="puzzle-wrapper">
       <puzzle-board
@@ -52,6 +40,7 @@
         :game-session-id="`challenge_${question.id}`"
         :puzzle-hint-interval="3"
         :include-skin-arts="settings.includeSkinArts"
+        :is-challenge="true"
         class="challenge-puzzle-board"
       />
     </div>
