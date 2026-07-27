@@ -35,6 +35,7 @@
         :guesses="guesses"
         :gameSessionId="`challenge_${question.id}`"
         :puzzleHintInterval="3"
+        :include-skin-arts="settings.includeSkinArts"
         :preloadedAssets="preloadedAssets"
         class="challenge-puzzle-board"
       />

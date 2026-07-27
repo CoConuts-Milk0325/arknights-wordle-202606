@@ -202,6 +202,10 @@ export default {
       type: Number,
       default: 3
     },
+    includeSkinArts: {
+      type: Boolean,
+      default: true
+    },
     customArtSelector: {
       type: Function,
       default: null
@@ -429,7 +433,8 @@ export default {
           600,
           initialViewportWidth.value,
           props.gameSessionId,
-          props.customArtSelector
+          props.customArtSelector,
+          props.includeSkinArts
         );
         
         loadingStatus.value = '图片加载完成';

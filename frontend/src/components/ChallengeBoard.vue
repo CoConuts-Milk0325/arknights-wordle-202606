@@ -150,14 +150,21 @@
               <div class="param-item">
                 <label class="param-label">提示间隔</label>
                 <div class="param-control">
-                  <input 
-                    type="range" 
-                    min="1" 
-                    max="5" 
+                  <input
+                    type="range"
+                    min="1"
+                    max="5"
                     v-model.number="challengeSettings.puzzleHintInterval"
                     class="modern-range"
                   />
                   <span class="param-value">每 {{ challengeSettings.puzzleHintInterval }} 次错误显示提示</span>
+                </div>
+              </div>
+              <div class="param-item">
+                <label class="param-label">皮肤立绘</label>
+                <div class="toggle-group">
+                  <button class="toggle-option" :class="{ active: challengeSettings.includeSkinArts }" @click="challengeSettings.includeSkinArts = true">包含</button>
+                  <button class="toggle-option" :class="{ active: !challengeSettings.includeSkinArts }" @click="challengeSettings.includeSkinArts = false">不包含</button>
                 </div>
               </div>
             </template>
@@ -293,7 +300,8 @@ export default {
       // 模式特有设置
       potentialMode: '满潜',
       trustMode: '满信赖',
-      puzzleHintInterval: 3
+      puzzleHintInterval: 3,
+      includeSkinArts: true
     });
 
     function applyChallengeStarPreset(preset) {

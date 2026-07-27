@@ -24,8 +24,10 @@ function addToCache(cache, key, value) {
 
 /**
  * 生成可用的立绘文件名列表
+ * @param {Object} operator - 干员数据
+ * @param {boolean} includeSkins - 是否包含皮肤立绘
  */
-export function getAvailableArts(operator) {
+export function getAvailableArts(operator, includeSkins = true) {
     const arts = [];
     // 基本立绘
     arts.push(`立绘_${operator.干员}_1.png`);
@@ -34,10 +36,12 @@ export function getAvailableArts(operator) {
         arts.push(`立绘_${operator.干员}_2.png`);
     }
     // 皮肤 (1..10)
-    for (let i = 1; i <= 10; i++) {
-        const s = operator[`皮肤${i}名称`];
-        if (s) {
-            arts.push(`立绘_${operator.干员}_skin${i}.png`);
+    if (includeSkins) {
+        for (let i = 1; i <= 10; i++) {
+            const s = operator[`皮肤${i}名称`];
+            if (s) {
+                arts.push(`立绘_${operator.干员}_skin${i}.png`);
+            }
         }
     }
     return arts;
@@ -49,33 +53,33 @@ const operatorArtCache = new Map();
 /**
  * 从干员的可用立绘随机选择一张，但在同一局游戏中保持一致
  */
-export function selectRandomArt(operator, gameSessionId = null) {
-    const list = getAvailableArts(operator);
+export function selectRandomArt(operator, gameSessionId = null, includeSkins = true) {
+    const list = getAvailableArts(operator, includeSkins);
     if (!list || list.length === 0) {
         return '';
     }
-    
+
     // 创建缓存键，结合干员名称和游戏会话ID
     const cacheKey = gameSessionId ? `${operator.干员}_${gameSessionId}` : operator.干员;
-    
+
     // 检查缓存
     if (operatorArtCache.has(cacheKey)) {
         return operatorArtCache.get(cacheKey);
     }
-    
+
     // 随机选择一张立绘
     const idx = Math.floor(Math.random() * list.length);
     const selectedArt = list[idx];
-    
+
     // 缓存选择结果
     operatorArtCache.set(cacheKey, selectedArt);
-    
+
     // 控制缓存大小
     if (operatorArtCache.size > 100) {
         const firstKey = operatorArtCache.keys().next().value;
         operatorArtCache.delete(firstKey);
     }
-    
+
     return selectedArt;
 }
 
@@ -104,8 +108,8 @@ export function clearAllCache() {
 /**
  * 加载图片并生成积分图 (integral image) 数据，以便高效计算区域平均颜色。
  */
-export async function loadPuzzleImage(operator, maxWidth = 600, maxHeight = 600, initialViewportWidth = 800, gameSessionId = null, customArtSelector = null) {
-    const fileName = customArtSelector ? customArtSelector(operator, gameSessionId) : selectRandomArt(operator, gameSessionId);
+export async function loadPuzzleImage(operator, maxWidth = 600, maxHeight = 600, initialViewportWidth = 800, gameSessionId = null, customArtSelector = null, includeSkins = true) {
+    const fileName = customArtSelector ? customArtSelector(operator, gameSessionId) : selectRandomArt(operator, gameSessionId, includeSkins);
     
     // 如果customArtSelector返回空字符串，表示跳过该干员
     if (!fileName) {

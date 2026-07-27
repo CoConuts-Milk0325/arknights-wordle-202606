@@ -168,6 +168,17 @@
                       </div>
                     </div>
 
+                    <div class="setting-item">
+                      <div class="setting-info">
+                        <label class="setting-label">皮肤立绘</label>
+                        <span class="setting-desc">猜图时是否包含皮肤立绘</span>
+                      </div>
+                      <div class="toggle-group">
+                        <button class="toggle-option" :class="{ active: includeSkinArts }" @click="includeSkinArts = true">包含</button>
+                        <button class="toggle-option" :class="{ active: !includeSkinArts }" @click="includeSkinArts = false">不包含</button>
+                      </div>
+                    </div>
+
                     <div class="setting-actions">
                       <button class="action-btn give-up-btn" @click="giveUpGame" :disabled="gameOver || gameWon">
                         <span class="btn-icon">🏳️</span>
@@ -332,6 +343,7 @@
                 :guesses="guesses"
                 :gameSessionId="gameSessionId"
                 :puzzleHintInterval="puzzleHintInterval"
+                :include-skin-arts="includeSkinArts"
                 @reset="resetGame"
                 class="board-component"
               />
@@ -420,6 +432,7 @@ export default {
     // 星级筛选 [1★, 2★, 3★, 4★, 5★, 6★]
     const starFilter = ref([true, true, true, true, true, true]);
     const starPreset = ref('all'); // 'all' | 'six' | 'fivePlus' | null
+    const includeSkinArts = ref(true); // 小头模式是否包含皮肤立绘
     const puzzleHintInterval = ref(3); // 小头模式提示间隔
 
     const tagGroups = ref([
@@ -507,7 +520,7 @@ export default {
         const urlsToPreload = [];
         
         for (const operator of operatorsToPreload) {
-          const arts = getAvailableArts(operator);
+          const arts = getAvailableArts(operator, includeSkinArts.value);
           // 每个干员预加载1-2张立绘
           const artToPreload = arts.slice(0, 2);
           for (const artFile of artToPreload) {
@@ -558,6 +571,9 @@ export default {
         if (typeof settings.puzzleHintInterval === 'number') {
           puzzleHintInterval.value = settings.puzzleHintInterval;
         }
+        if (typeof settings.includeSkinArts === 'boolean') {
+          includeSkinArts.value = settings.includeSkinArts;
+        }
       }
       // 应用主题
       setTheme(currentTheme.value);
@@ -571,7 +587,8 @@ export default {
         potentialMode,
         trustMode,
         currentTheme,
-        puzzleHintInterval
+        puzzleHintInterval,
+        includeSkinArts
       ],
       () => {
         saveToCookies();
@@ -584,6 +601,11 @@ export default {
       resetGame();
     }, { deep: true });
 
+    // 监听皮肤立绘开关改变，自动重新开局
+    watch(includeSkinArts, () => {
+      resetGame();
+    });
+
     const saveToCookies = () => {
       const settings = {
         starFilter: starFilter.value,
@@ -591,7 +613,8 @@ export default {
         selectedTagGroupId: selectedTagGroup.value.id,
         potentialMode: potentialMode.value,
         trustMode: trustMode.value,
-        puzzleHintInterval: puzzleHintInterval.value
+        puzzleHintInterval: puzzleHintInterval.value,
+        includeSkinArts: includeSkinArts.value
       };
       saveSettings(settings);
       // 主题
@@ -813,7 +836,8 @@ export default {
       
       // 小头模式设置
       puzzleHintInterval,
-      
+      includeSkinArts,
+
       // 挑战模式
       isInChallengeMode,
       enterChallengeMode,

@@ -54,7 +54,7 @@ export async function generateChallengeQuestions(operators, settings, progressCa
     // 如果是小头模式，预加载图片
     if (gameMode === 'puzzle') {
       try {
-        const preloadResult = await preloadPuzzleAssets(targetOperator, `challenge_q${i + 1}`);
+        const preloadResult = await preloadPuzzleAssets(targetOperator, `challenge_q${i + 1}`, settings.includeSkinArts);
         question.puzzleAssets = preloadResult;
       } catch (error) {
         console.warn(`预加载题目 ${i + 1} 的图片失败:`, error);
@@ -76,7 +76,7 @@ export async function generateChallengeQuestions(operators, settings, progressCa
  * @param {string} sessionId - 会话ID
  * @returns {Promise<Object>} 预加载结果
  */
-async function preloadPuzzleAssets(operator, sessionId) {
+async function preloadPuzzleAssets(operator, sessionId, includeSkinArts = true) {
   try {
     // 加载拼图图片
     const puzzleResult = await loadPuzzleImage(
@@ -84,7 +84,9 @@ async function preloadPuzzleAssets(operator, sessionId) {
       600,
       600,
       window.innerWidth,
-      sessionId
+      sessionId,
+      null,
+      includeSkinArts
     );
     
     return {
