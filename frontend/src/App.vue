@@ -309,6 +309,8 @@
               v-if="isInChallengeMode"
               :operators="operatorData"
               :available-modes="tagGroups"
+              :skill-data="skillData"
+              :skill-reverse="skillReverse"
               @back="exitChallengeMode"
               class="board-component"
             />

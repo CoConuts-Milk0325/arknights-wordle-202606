@@ -45,6 +45,22 @@
       />
     </div>
 
+    <div v-else-if="settings.gameMode === 'skill'" class="puzzle-wrapper">
+      <skill-board
+        :target-operator="question.targetOperator"
+        :max-guesses="settings.maxGuesses"
+        :game-over="gameOver"
+        :game-won="gameWon"
+        :user-gave-up="false"
+        :guesses="guesses"
+        :game-session-id="`challenge_${question.id}`"
+        :puzzle-hint-interval="3"
+        :preloaded-assets="{ skillData: skillData }"
+        :is-challenge="true"
+        class="challenge-puzzle-board"
+      />
+    </div>
+
     <div v-else class="normal-wrapper">
       <game-board
         :operatorData="operators"
@@ -71,6 +87,7 @@ import GuessInput from './GuessInput.vue';
 import GameBoard from './GameBoard.vue';
 import PuzzleBoard from './PuzzleBoard.vue';
 import TruePuzzleBoard from './TruePuzzleBoard.vue';
+import SkillBoard from './SkillBoard.vue';
 
 export default {
   name: 'ChallengeGameWrapper',
@@ -78,7 +95,8 @@ export default {
     GuessInput,
     GameBoard,
     PuzzleBoard,
-    TruePuzzleBoard
+    TruePuzzleBoard,
+    SkillBoard
   },
   props: {
     question: {
@@ -110,6 +128,10 @@ export default {
       default: false
     },
     preloadedAssets: {
+      type: Object,
+      default: null
+    },
+    skillData: {
       type: Object,
       default: null
     }

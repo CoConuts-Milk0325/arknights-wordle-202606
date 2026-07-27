@@ -23,7 +23,7 @@ export async function generateChallengeQuestions(operators, settings, progressCa
       return starFilter[star - 1];
     });
   }
-    
+
   if (availableOperators.length < questionCount) {
     throw new Error(`可用干员数量不足，需要 ${questionCount} 个，但只有 ${availableOperators.length} 个`);
   }

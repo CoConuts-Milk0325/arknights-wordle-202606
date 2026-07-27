@@ -235,6 +235,7 @@
             :gameOver="gameOver"
             :gameWon="gameWon"
             :preloadedAssets="currentQuestion.puzzleAssets"
+            :skillData="skillData"
             @guess="handleGuess"
             class="question-board"
           />
@@ -274,6 +275,14 @@ export default {
     operators: {
       type: Array,
       required: true
+    },
+    skillData: {
+      type: Object,
+      default: null
+    },
+    skillReverse: {
+      type: Object,
+      default: null
     },
     availableModes: {
       type: Array,
@@ -360,8 +369,13 @@ export default {
       
       try {
         // 生成挑战题目
+        let challengeOps = props.operators;
+        // 技能模式只选有技能的干员
+        if (challengeSettings.value.gameMode === 'skill' && props.skillData) {
+          challengeOps = challengeOps.filter(op => props.skillData[op.干员]);
+        }
         const questions = await generateChallengeQuestions(
-          props.operators,
+          challengeOps,
           challengeSettings.value,
           (progress) => {
             preparingProgress.value = Math.round(progress * 100);
@@ -427,47 +441,75 @@ export default {
       }
     };
 
-    // 处理猜测
+        // 处理猜测
     const handleGuess = (operatorName) => {
       if (gameOver.value || gameWon.value) return;
-      
+
+      const mode = challengeSettings.value.gameMode;
+
+      // 猜技能模式：支持技能名匹配
+      if (mode === 'skill') {
+        const guessedOp = props.operators.find(op => {
+          if (op.干员 === operatorName) return true;
+          const normalize = (n) => n.replace(/[\u00B7\u2022\u2027\u00B2]/g, '').replace(/\u00B2/g, '2');
+          if (normalize(op.干员) === normalize(operatorName)) return true;
+          return false;
+        });
+
+        if (guessedOp) {
+          currentGuesses.value.push(guessedOp);
+          if (guessedOp.干员 === currentQuestion.value.targetOperator.干员) {
+            gameWon.value = true;
+            questionComplete(true);
+            return;
+          }
+        } else {
+          const target = currentQuestion.value.targetOperator;
+          const targetSkills = props.skillData?.[target.干员];
+          if (targetSkills?.some(s => s.技能名 === operatorName)) {
+            currentGuesses.value.push(target);
+            gameWon.value = true;
+            questionComplete(true);
+            return;
+          }
+          if (props.skillReverse?.[operatorName]) {
+            const ownerName = props.skillReverse[operatorName];
+            const ownerOp = props.operators.find(o => o.干员 === ownerName);
+            if (ownerOp) currentGuesses.value.push(ownerOp);
+          }
+        }
+
+        if (currentGuesses.value.length >= challengeSettings.value.maxGuesses && !gameWon.value) {
+          gameOver.value = true;
+          questionComplete(false);
+        }
+        return;
+      }
+
       // 找到猜测的干员 - 增强查找逻辑
+      const normalizeName = (n) => n.replace(/[\u00B7\u2022\u2027]/g, '');
       const guessedOp = props.operators.find(op => {
-        // 1. 精确匹配
         if (op.干员 === operatorName) return true;
-        
-        // 2. 清理特殊字符后匹配
-        const cleanOpName = op.干员.replace(/[·\u00B7\u2022\u2027]/g, '');
-        const cleanInputName = operatorName.replace(/[·\u00B7\u2022\u2027]/g, '');
-        if (cleanOpName === cleanInputName) return true;
-        
+        if (normalizeName(op.干员) === normalizeName(operatorName)) return true;
         return false;
       });
-      
+
       if (!guessedOp) {
         console.warn('未找到干员:', operatorName);
         return;
       }
-      
+
       currentGuesses.value.push(guessedOp);
-      
-      // 检查是否猜对
+
       const isCorrect = guessedOp.干员 === currentQuestion.value.targetOperator.干员;
-      
-      // 通知成就系统处理猜测
-      achievementChecker.processGuess(
-        guessedOp, 
-        isCorrect, 
-        currentQuestion.value.targetOperator
-      );
-      
-      // 检查实时成就
+
+      achievementChecker.processGuess(guessedOp, isCorrect, currentQuestion.value.targetOperator);
+
       const newAchievements = achievementChecker.checkRealTimeAchievements();
       achievementEmitter.emitAchievements(newAchievements);
-      
-      // 如果不是小头模式，需要生成对比结果
-      if (challengeSettings.value.gameMode !== 'puzzle') {
-        // 获取选中的标签组
+
+      // 如果不是小头/技能模式，需要生成对比结果
+      if (mode !== 'puzzle' && mode !== 'skill') {
         const tagGroup = getSelectedTagGroup();
         const comparison = compareOperators(
           guessedOp,
@@ -478,7 +520,7 @@ export default {
         );
         currentComparisons.value.push(comparison);
       }
-      
+
       if (isCorrect) {
         gameWon.value = true;
         questionComplete(true);
@@ -486,9 +528,7 @@ export default {
         gameOver.value = true;
         questionComplete(false);
       }
-    };
-
-    // 时间到
+    };    // 时间到
     const timeUp = () => {
       if (!gameOver.value && !gameWon.value) {
         gameOver.value = true;
@@ -606,6 +646,10 @@ export default {
         hard: {
           id: 'hard',
           tags: ['星级', '满级攻击', '满级生命', '满级防御', '满级法术抗性', '攻击间隔', '上线年份', '标签']
+        },
+        skill: {
+          id: 'skill',
+          tags: []
         }
       };
       return tagMap[challengeSettings.value.gameMode] || tagMap.easy;
