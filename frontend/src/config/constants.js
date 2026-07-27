@@ -104,6 +104,12 @@ export const TAG_GROUPS = [
     name: '真·小头',
     description: '从局部立绘逐步扩大范围来猜干员',
     tags: []
+  },
+  {
+    id: 'skill',
+    name: '猜技能',
+    description: '通过技能图标来猜干员',
+    tags: []
   }
 ];
 

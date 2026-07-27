@@ -92,3 +92,5 @@ temp/
 
 # Webpack bundle analyzer
 bundle-analyzer-report.html
+# Visual companion temp files
+.superpowers/

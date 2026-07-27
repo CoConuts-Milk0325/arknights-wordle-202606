@@ -106,10 +106,10 @@
 
           <!-- 游戏设置 -->
           <div v-if="!isInChallengeMode" class="settings-section">
-            <div v-if="selectedTagGroup.id === 'puzzle' || selectedTagGroup.id === 'truePuzzle'" class="settings-card puzzle-settings">
+            <div v-if="selectedTagGroup.id === 'puzzle' || selectedTagGroup.id === 'truePuzzle' || selectedTagGroup.id === 'skill'" class="settings-card puzzle-settings">
               <div class="settings-header">
                 <span class="settings-icon">⚙️</span>
-                <h3>{{ selectedTagGroup.id === 'truePuzzle' ? '真·小头' : '小头' }}模式设置</h3>
+                <h3>{{ selectedTagGroup.id === 'truePuzzle' ? '真·小头' : selectedTagGroup.id === 'skill' ? '猜技能' : '小头' }}模式设置</h3>
                 <button class="toggle-btn" @click="showAdvanced = !showAdvanced">
                   <span class="toggle-icon">{{ showAdvanced ? '➖' : '➕' }}</span>
                 </button>
@@ -168,7 +168,7 @@
                       </div>
                     </div>
 
-                    <div class="setting-item">
+                    <div class="setting-item" v-if="selectedTagGroup.id !== 'skill'">
                       <div class="setting-info">
                         <label class="setting-label">皮肤立绘</label>
                         <span class="setting-desc">猜图时是否包含皮肤立绘</span>
@@ -316,7 +316,7 @@
             <!-- 普通游戏模式 -->
             <template v-else>
               <game-board
-                v-if="selectedTagGroup.id !== 'puzzle' && selectedTagGroup.id !== 'truePuzzle'"
+                v-if="selectedTagGroup.id === 'hard' || selectedTagGroup.id === 'easy'"
                 :operatorData="filteredOperators"
                 :guesses="guesses"
                 :comparisons="comparisons"
@@ -362,6 +362,21 @@
                 @reset="resetGame"
                 class="board-component"
               />
+
+              <skill-board
+                v-if="selectedTagGroup.id === 'skill'"
+                :target-operator="targetOperator"
+                :max-guesses="maxGuesses"
+                :game-over="gameOver"
+                :game-won="gameWon"
+                :user-gave-up="userGaveUp"
+                :guesses="guesses"
+                :game-session-id="gameSessionId"
+                :puzzle-hint-interval="puzzleHintInterval"
+                :preloaded-assets="{ skillData }"
+                @reset="resetGame"
+                class="board-component"
+              />
             </template>
           </div>
         </div>
@@ -398,6 +413,7 @@ import GuessInput from './components/GuessInput.vue';
 import TagSelector from './components/TagSelector.vue';
 import PuzzleBoard from './components/PuzzleBoard.vue';
 import TruePuzzleBoard from './components/TruePuzzleBoard.vue';
+import SkillBoard from './components/SkillBoard.vue';
 import ChallengeBoard from './components/ChallengeBoard.vue';
 import AchievementToast from './components/AchievementToast.vue';
 
@@ -426,6 +442,7 @@ export default {
     TagSelector,
     PuzzleBoard,
     TruePuzzleBoard,
+    SkillBoard,
     ChallengeBoard,
     AchievementToast,
     ErrorToast
@@ -451,6 +468,8 @@ export default {
     const starPreset = ref('all'); // 'all' | 'six' | 'fivePlus' | null
     const includeSkinArts = ref(true); // 小头模式是否包含皮肤立绘
     const puzzleHintInterval = ref(3); // 小头模式提示间隔
+    const skillData = ref(null);
+    const skillReverse = ref({});
 
     const tagGroups = ref([
       {
@@ -474,6 +493,12 @@ export default {
         id: 'truePuzzle',
         name: '真·小头',
         description: '从局部立绘逐步扩大范围来猜干员',
+        tags: []
+      },
+      {
+        id: 'skill',
+        name: '猜技能',
+        description: '通过技能图标来猜干员',
         tags: []
       }
     ]);
@@ -664,6 +689,19 @@ export default {
         preprocessOperators(data);
         operatorData.value = data;
         showToast('干员数据加载成功！', 'success');
+
+        // 加载技能数据
+        try {
+          const [skillsResp, reverseResp] = await Promise.all([
+            fetch('./data/skills.json'),
+            fetch('./data/skills-reverse.json')
+          ]);
+          skillData.value = await skillsResp.json();
+          skillReverse.value = await reverseResp.json();
+          console.log(`技能数据: ${Object.keys(skillData.value).length} 名干员, ${Object.keys(skillReverse.value).length} 个技能`);
+        } catch (err) {
+          console.warn('技能数据加载失败:', err);
+        }
       } catch (err) {
         const errorInfo = handleError(err, '加载干员数据');
         showToast(errorInfo.message);
@@ -681,15 +719,21 @@ export default {
     };
 
     const pickRandomTarget = () => {
-      const availableOperators = filteredOperators.value;
+      let availableOperators = filteredOperators.value;
+
+      // 技能模式只选有技能数据的干员
+      if (selectedTagGroup.value.id === 'skill' && skillData.value) {
+        availableOperators = availableOperators.filter(op => skillData.value[op.干员]);
+      }
+
       console.log(`选择目标干员，可用干员数量: ${availableOperators.length}`);
-      
+
       if (availableOperators.length === 0) {
         console.warn('没有可用的干员来选择作为目标');
         targetOperator.value = null;
         return;
       }
-      
+
       const newTarget = selectRandomOperator(availableOperators);
       if (newTarget) {
         console.log(`新目标干员已选择: ${newTarget.干员} (${newTarget.星级}星, ${newTarget.职业})`);
@@ -723,13 +767,49 @@ export default {
         return false;
       });
       
-      if (!guessedOp) {
-        showToast(`未找到干员: ${sanitizedName}`);
+      // 猜技能模式
+      if (selectedTagGroup.value.id === 'skill') {
+        // 1) 输入的是干员名
+        if (guessedOp) {
+          guesses.value.push(guessedOp);
+          if (guessedOp.干员 === targetOperator.value?.干员) {
+            gameWon.value = true;
+          }
+        } else {
+          // 2) 检查是不是当前目标干员的技能名
+          const targetSkills = skillData.value[targetOperator.value?.干员];
+          const isTargetSkill = targetSkills?.some(s => s.技能名 === sanitizedName);
+          if (isTargetSkill) {
+            guesses.value.push(targetOperator.value);
+            gameWon.value = true;
+          } else if (skillReverse.value[sanitizedName]) {
+            // 3) 是其他干员的技能名
+            const ownerName = skillReverse.value[sanitizedName];
+            const ownerOp = filteredOperators.value.find(o => o.干员 === ownerName);
+            if (ownerOp) {
+              guesses.value.push(ownerOp);
+            } else {
+              showToast(`未找到技能所属干员: ${ownerName}`);
+              return;
+            }
+          } else {
+            showToast(`未找到干员或技能: ${sanitizedName}`);
+            return;
+          }
+        }
+
+        if (guesses.value.length >= maxGuesses.value && !gameWon.value) {
+          gameOver.value = true;
+        }
         return;
       }
 
       // puzzle模式
       if (selectedTagGroup.value.id === 'puzzle') {
+        if (!guessedOp) {
+          showToast(`未找到干员: ${sanitizedName}`);
+          return;
+        }
         guesses.value.push(guessedOp);
         if (guessedOp.干员 === targetOperator.value?.干员) {
           gameWon.value = true;
@@ -739,6 +819,10 @@ export default {
         }
       } else {
         // 普通模式
+        if (!guessedOp) {
+          showToast(`未找到干员: ${sanitizedName}`);
+          return;
+        }
         guesses.value.push(guessedOp);
         comparisons.value.push(
           compareOperators(
@@ -860,6 +944,10 @@ export default {
       // 小头模式设置
       puzzleHintInterval,
       includeSkinArts,
+
+      // 猜技能模式数据
+      skillData,
+      skillReverse,
 
       // 挑战模式
       isInChallengeMode,

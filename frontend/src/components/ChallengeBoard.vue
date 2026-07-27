@@ -588,9 +588,10 @@ export default {
     const getModeDisplayName = (mode) => {
       const nameMap = {
         easy: '大头',
-        hard: '兔头', 
+        hard: '兔头',
         puzzle: '小头',
-        truePuzzle: '真·小头'
+        truePuzzle: '真·小头',
+        skill: '猜技能'
       };
       return nameMap[mode] || mode;
     };
