@@ -106,10 +106,10 @@
 
           <!-- 游戏设置 -->
           <div v-if="!isInChallengeMode" class="settings-section">
-            <div v-if="selectedTagGroup.id === 'puzzle'" class="settings-card puzzle-settings">
+            <div v-if="selectedTagGroup.id === 'puzzle' || selectedTagGroup.id === 'truePuzzle'" class="settings-card puzzle-settings">
               <div class="settings-header">
                 <span class="settings-icon">⚙️</span>
-                <h3>小头模式设置</h3>
+                <h3>{{ selectedTagGroup.id === 'truePuzzle' ? '真·小头' : '小头' }}模式设置</h3>
                 <button class="toggle-btn" @click="showAdvanced = !showAdvanced">
                   <span class="toggle-icon">{{ showAdvanced ? '➖' : '➕' }}</span>
                 </button>
@@ -316,7 +316,7 @@
             <!-- 普通游戏模式 -->
             <template v-else>
               <game-board
-                v-if="selectedTagGroup.id !== 'puzzle'"
+                v-if="selectedTagGroup.id !== 'puzzle' && selectedTagGroup.id !== 'truePuzzle'"
                 :operatorData="filteredOperators"
                 :guesses="guesses"
                 :comparisons="comparisons"
@@ -333,7 +333,7 @@
               />
 
               <puzzle-board
-                v-else
+                v-if="selectedTagGroup.id === 'puzzle'"
                 :operators="filteredOperators"
                 :targetOperator="targetOperator"
                 :maxGuesses="maxGuesses"
@@ -343,6 +343,21 @@
                 :guesses="guesses"
                 :gameSessionId="gameSessionId"
                 :puzzleHintInterval="puzzleHintInterval"
+                :include-skin-arts="includeSkinArts"
+                @reset="resetGame"
+                class="board-component"
+              />
+
+              <true-puzzle-board
+                v-if="selectedTagGroup.id === 'truePuzzle'"
+                :target-operator="targetOperator"
+                :max-guesses="maxGuesses"
+                :game-over="gameOver"
+                :game-won="gameWon"
+                :user-gave-up="userGaveUp"
+                :guesses="guesses"
+                :game-session-id="gameSessionId"
+                :puzzle-hint-interval="puzzleHintInterval"
                 :include-skin-arts="includeSkinArts"
                 @reset="resetGame"
                 class="board-component"
@@ -382,6 +397,7 @@ import GameBoard from './components/GameBoard.vue';
 import GuessInput from './components/GuessInput.vue';
 import TagSelector from './components/TagSelector.vue';
 import PuzzleBoard from './components/PuzzleBoard.vue';
+import TruePuzzleBoard from './components/TruePuzzleBoard.vue';
 import ChallengeBoard from './components/ChallengeBoard.vue';
 import AchievementToast from './components/AchievementToast.vue';
 
@@ -409,6 +425,7 @@ export default {
     GuessInput,
     TagSelector,
     PuzzleBoard,
+    TruePuzzleBoard,
     ChallengeBoard,
     AchievementToast,
     ErrorToast
@@ -450,7 +467,13 @@ export default {
       {
         id: 'puzzle',
         name: '小头...?',
-        description: '通过像素化立绘逐步细化来猜干员',
+        description: '像素化立绘逐步细化来猜干员',
+        tags: []
+      },
+      {
+        id: 'truePuzzle',
+        name: '真·小头',
+        description: '从局部立绘逐步扩大范围来猜干员',
         tags: []
       }
     ]);
@@ -498,8 +521,8 @@ export default {
         selectedTagGroup.value = group;
         resetGame();
         
-        // 如果切换到小头模式，启动预加载
-        if (groupId === 'puzzle') {
+        // 如果切换到小头/真·小头模式，启动预加载
+        if (groupId === 'puzzle' || groupId === 'truePuzzle') {
           startPuzzlePreloading();
         }
       }
@@ -515,14 +538,14 @@ export default {
         // 选择一些高频干员进行预加载（6星干员优先）
         const operatorsToPreload = filteredOperators.value
           .filter(op => op.星级 >= 5) // 5星及以上
-          .slice(0, 10); // 限制数量避免过多网络请求
-        
+          .slice(0, 5); // 减少预加载数量
+
         const urlsToPreload = [];
-        
+
         for (const operator of operatorsToPreload) {
           const arts = getAvailableArts(operator, includeSkinArts.value);
-          // 每个干员预加载1-2张立绘
-          const artToPreload = arts.slice(0, 2);
+          // 每个干员预加载1张立绘
+          const artToPreload = arts.slice(0, 1);
           for (const artFile of artToPreload) {
             urlsToPreload.push(getImagePath(artFile));
           }

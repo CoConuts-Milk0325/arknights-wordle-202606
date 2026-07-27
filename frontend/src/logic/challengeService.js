@@ -51,8 +51,8 @@ export async function generateChallengeQuestions(operators, settings, progressCa
       questionIndex: i
     };
     
-    // 如果是小头模式，预加载图片
-    if (gameMode === 'puzzle') {
+    // 如果是小头/真·小头模式，预加载图片
+    if (gameMode === 'puzzle' || gameMode === 'truePuzzle') {
       try {
         const preloadResult = await preloadPuzzleAssets(targetOperator, `challenge_q${i + 1}`, settings.includeSkinArts);
         question.puzzleAssets = preloadResult;

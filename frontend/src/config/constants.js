@@ -96,7 +96,13 @@ export const TAG_GROUPS = [
   {
     id: 'puzzle',
     name: '小头...?',
-    description: '通过像素化立绘逐步细化来猜干员',
+    description: '像素化立绘逐步细化来猜干员',
+    tags: []
+  },
+  {
+    id: 'truePuzzle',
+    name: '真·小头',
+    description: '从局部立绘逐步扩大范围来猜干员',
     tags: []
   }
 ];

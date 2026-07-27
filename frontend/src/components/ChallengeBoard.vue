@@ -145,8 +145,8 @@
               </div>
             </template>
 
-            <!-- 小头模式特有设置 -->
-            <template v-if="challengeSettings.gameMode === 'puzzle'">
+            <!-- 小头/真·小头模式特有设置 -->
+            <template v-if="challengeSettings.gameMode === 'puzzle' || challengeSettings.gameMode === 'truePuzzle'">
               <div class="param-item">
                 <label class="param-label">提示间隔</label>
                 <div class="param-control">
@@ -280,7 +280,8 @@ export default {
       default: () => [
         { id: 'easy', name: '大头模式', description: '基础属性猜测', icon: '🎯' },
         { id: 'hard', name: '兔头模式', description: '数值属性猜测', icon: '🔥' },
-        { id: 'puzzle', name: '小头模式', description: '立绘拼图猜测', icon: '🧩' }
+        { id: 'puzzle', name: '小头模式', description: '立绘拼图猜测', icon: '🧩' },
+        { id: 'truePuzzle', name: '真·小头', description: '从局部立绘逐步扩大范围', icon: '🎯' }
       ]
     }
   },
@@ -588,7 +589,8 @@ export default {
       const nameMap = {
         easy: '大头',
         hard: '兔头', 
-        puzzle: '小头'
+        puzzle: '小头',
+        truePuzzle: '真·小头'
       };
       return nameMap[mode] || mode;
     };

@@ -41,6 +41,21 @@
       />
     </div>
 
+    <div v-else-if="settings.gameMode === 'truePuzzle'" class="puzzle-wrapper">
+      <true-puzzle-board
+        :target-operator="question.targetOperator"
+        :max-guesses="settings.maxGuesses"
+        :game-over="gameOver"
+        :game-won="gameWon"
+        :user-gave-up="false"
+        :guesses="guesses"
+        :game-session-id="`challenge_${question.id}`"
+        :puzzle-hint-interval="3"
+        :include-skin-arts="settings.includeSkinArts"
+        class="challenge-puzzle-board"
+      />
+    </div>
+
     <div v-else class="normal-wrapper">
       <game-board
         :operatorData="operators"
@@ -66,13 +81,15 @@ import { computed } from 'vue';
 import GuessInput from './GuessInput.vue';
 import GameBoard from './GameBoard.vue';
 import PuzzleBoard from './PuzzleBoard.vue';
+import TruePuzzleBoard from './TruePuzzleBoard.vue';
 
 export default {
   name: 'ChallengeGameWrapper',
   components: {
     GuessInput,
     GameBoard,
-    PuzzleBoard
+    PuzzleBoard,
+    TruePuzzleBoard
   },
   props: {
     question: {
