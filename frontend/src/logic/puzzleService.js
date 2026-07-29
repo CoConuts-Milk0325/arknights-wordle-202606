@@ -67,8 +67,12 @@ export function selectRandomArt(operator, gameSessionId = null, includeSkins = t
         return operatorArtCache.get(cacheKey);
     }
 
-    // 随机选择一张立绘
-    const idx = Math.floor(Math.random() * list.length);
+    // 加权随机选择：精一（_1.png）权重1，其他立绘权重3
+    const weights = list.map((art) => art.endsWith('_1.png') ? 1 : 3);
+    const totalWeight = weights.reduce((a, b) => a + b, 0);
+    let r = Math.random() * totalWeight;
+    let idx = 0;
+    while (r > weights[idx]) { r -= weights[idx]; idx++; }
     const selectedArt = list[idx];
 
     // 缓存选择结果

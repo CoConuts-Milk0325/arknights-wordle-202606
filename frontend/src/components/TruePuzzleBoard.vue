@@ -257,8 +257,7 @@ export default {
       if (props.gameWon || props.gameOver || props.userGaveUp) return 1;
       // 缩放倍数线性递减，随猜错次数逐步缩小
       const maxZoom = 8;
-      const step = (maxZoom - 1) / (props.maxGuesses || 6);
-      return Math.max(1, maxZoom - wrongGuessCount.value * step);
+      return Math.max(1, maxZoom - wrongGuessCount.value * 2);
     });
 
     const showFullImage = computed(() =>
