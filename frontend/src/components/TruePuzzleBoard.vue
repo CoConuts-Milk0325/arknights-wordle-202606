@@ -118,6 +118,30 @@ export default {
     const loaded = ref(false);
     const canvasSize = ref({ w: 500, h: 500 });
     const contentAreas = ref([[0.2, 0.2, 0.2, 0.2], [0.4, 0.2, 0.2, 0.2], [0.6, 0.2, 0.2, 0.2], [0.2, 0.4, 0.2, 0.2], [0.4, 0.4, 0.2, 0.2], [0.6, 0.4, 0.2, 0.2], [0.2, 0.6, 0.2, 0.2], [0.4, 0.6, 0.2, 0.2], [0.6, 0.6, 0.2, 0.2]]);
+    const cropCenter = ref({ cx: 0.5, cy: 0.5 });
+    
+    // 纯随机选非透明像素（最多重试30次）
+    const MAX_ALPHA_RETRIES = 30;
+    function pickOpaqueCenter(ctx, imgW, imgH) {
+      for (let attempt = 0; attempt < MAX_ALPHA_RETRIES; attempt++) {
+        const cx = Math.random();
+        const cy = Math.random();
+        const px = Math.floor(cx * imgW);
+        const py = Math.floor(cy * imgH);
+        try {
+          const pixel = ctx.getImageData(px, py, 1, 1);
+          if (pixel.data[3] > 128) {
+            cropCenter.value = { cx, cy };
+            return;
+          }
+        } catch {
+          // CORS 受限，直接使用随机位置
+          cropCenter.value = { cx, cy };
+          return;
+        }
+      }
+      cropCenter.value = { cx: Math.random(), cy: Math.random() };
+    }
 
     // 图像显示尺寸（自适应）
 
@@ -194,13 +218,27 @@ export default {
 
       updateCanvasSize();
       await nextTick();
+      selectCropCenter();
       renderCanvas();
 
       loadingProgress.value = 100;
       loadingStatus.value = '初始化完成！';
-      // 短暂显示完成状态后隐藏加载指示器
       await new Promise(r => setTimeout(r, 200));
+      
       loadingImage.value = false;
+    }
+
+    function selectCropCenter() {
+      const img = loadedImage.value;
+      const canvas = canvasRef.value;
+      if (!img || !canvas) return;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return;
+      const cw = canvas.width;
+      const ch = canvas.height;
+      // 将图片缩放垫满画布用于alpha检测
+      ctx.drawImage(img, 0, 0, cw, ch);
+      pickOpaqueCenter(ctx, cw, ch);
     }
 
     // 预定义有内容的裁切区域（CDN 跨域限制无法扫描像素）
@@ -218,7 +256,7 @@ export default {
       // 猜对/猜完时显示全图
       if (props.gameWon || props.gameOver || props.userGaveUp) return 1;
       // 缩放倍数线性递减，随猜错次数逐步缩小
-      const maxZoom = 3;
+      const maxZoom = 8;
       const step = (maxZoom - 1) / (props.maxGuesses || 6);
       return Math.max(1, maxZoom - wrongGuessCount.value * step);
     });
@@ -249,13 +287,9 @@ export default {
       const winX = (cw - winW) / 2;
       const winY = (ch - winH) / 2;
 
-      // 从有内容的区域中随机选裁剪中心
-      const seed = hashStr(props.targetOperator.干员 + '_' + props.gameSessionId);
-      const randVal = (n) => ((seed >> (n * 8)) ^ (n * 12345)) / 2147483647;
-      const idx = Math.floor(Math.abs(randVal(0)) * contentAreas.value.length);
-      const area = contentAreas.value[Math.min(idx, contentAreas.value.length - 1)];
-      const cx = area[0] + (randVal(1) - Math.floor(randVal(1))) * area[2];
-      const cy = area[1] + (randVal(2) - Math.floor(randVal(2))) * area[3];
+      // 使用已选好的非透明裁剪中心
+      const cx = cropCenter.value.cx;
+      const cy = cropCenter.value.cy;
 
       // 图片适配画布的尺寸
       const fitScale = Math.min(cw / iw, ch / ih);
@@ -273,16 +307,6 @@ export default {
       ctx.drawImage(img, 0, 0, iw, ih, imgX, imgY, zoomW, zoomH);
     }
 
-    // 简单哈希函数（种子）
-    function hashStr(str) {
-      let hash = 0;
-      for (let i = 0; i < str.length; i++) {
-        const char = str.charCodeAt(i);
-        hash = ((hash << 5) - hash) + char;
-        hash |= 0;
-      }
-      return Math.abs(hash);
-    }
 
     // ========== 监听 ==========
     watch(() => props.guesses.length, () => {
