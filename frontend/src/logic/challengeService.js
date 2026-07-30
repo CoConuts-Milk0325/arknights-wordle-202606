@@ -33,14 +33,32 @@ export async function generateChallengeQuestions(operators, settings, progressCa
   
   progressCallback(0.1);
   
+  // 支持 URL 参数强制指定第一题目标干员：?target=银灰
+  const forceTargetParams = typeof window !== 'undefined'
+    ? new URLSearchParams(window.location.search).get('target')
+    : null;
+  
   // 生成题目
   for (let i = 0; i < questionCount; i++) {
     let targetOperator;
     
-    // 确保不重复选择干员
-    do {
-      targetOperator = selectRandomOperator(availableOperators);
-    } while (usedOperators.has(targetOperator.干员));
+    // 第一题：如果 URL 参数指定了干员且可用，优先使用
+    if (i === 0 && forceTargetParams) {
+      const found = availableOperators.find(op => op.干员 === forceTargetParams);
+      if (found && !usedOperators.has(found.干员)) {
+        targetOperator = found;
+        console.log(`[调试] 挑战模式URL参数强制目标干员: ${found.干员}`);
+      } else {
+        console.warn(`[调试] URL参数指定的干员 "${forceTargetParams}" 不可用，回退随机`);
+      }
+    }
+    
+    // 如果没指定强制目标或不可用，随机选择（不重复）
+    if (!targetOperator) {
+      do {
+        targetOperator = selectRandomOperator(availableOperators);
+      } while (usedOperators.has(targetOperator.干员));
+    }
     
     usedOperators.add(targetOperator.干员);
     

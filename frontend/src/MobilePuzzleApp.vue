@@ -407,6 +407,22 @@ export default {
         return;
       }
       
+      // 支持 URL 参数强制指定目标干员：?target=银灰
+      const params = new URLSearchParams(window.location.search);
+      const forceTarget = params.get('target');
+      if (forceTarget) {
+        // 直接用 operators 查找，避免 filteredOperators computed 缓存问题
+        const targetOp = operators.value.find(op => op.干员 === forceTarget);
+        if (targetOp) {
+          console.log(`[调试] URL参数强制目标干员: ${targetOp.干员}`);
+          targetOperator.value = targetOp;
+          console.log('目标干员:', targetOperator.value?.干员);
+          return;
+        } else {
+          showTempMessageFunc(`未找到干员「${forceTarget}」，请检查名称`);
+        }
+      }
+      
       targetOperator.value = selectRandomOperator(operatorsWithValidArt);
       console.log('目标干员:', targetOperator.value?.干员);
     };

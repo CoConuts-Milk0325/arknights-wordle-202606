@@ -728,6 +728,24 @@ export default {
         availableOperators = availableOperators.filter(op => skillData.value[op.干员]);
       }
 
+      // 支持 URL 参数强制指定目标干员：?target=银灰
+      const params = new URLSearchParams(window.location.search);
+      const forceTarget = params.get('target');
+      if (forceTarget) {
+        // 数据还没加载完时不处理，pickRandomTarget 随后会被重新调用
+        if (operatorData.value.length === 0) return;
+        
+        // 直接用 operatorData 查找，避免 filteredOperators computed 缓存问题
+        const targetOp = operatorData.value.find(op => op.干员 === forceTarget);
+        if (targetOp) {
+          console.log(`[调试] URL参数强制目标干员: ${targetOp.干员}`);
+          targetOperator.value = targetOp;
+          return;
+        } else {
+          showToast(`未找到干员「${forceTarget}」，请检查名称`);
+        }
+      }
+
       console.log(`选择目标干员，可用干员数量: ${availableOperators.length}`);
 
       if (availableOperators.length === 0) {
