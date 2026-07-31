@@ -310,7 +310,6 @@
               :operators="operatorData"
               :available-modes="tagGroups"
               :skill-data="skillData"
-              :skill-reverse="skillReverse"
               @back="exitChallengeMode"
               class="board-component"
             />
@@ -471,7 +470,6 @@ export default {
     const includeSkinArts = ref(true); // 小头模式是否包含皮肤立绘
     const puzzleHintInterval = ref(3); // 小头模式提示间隔
     const skillData = ref(null);
-    const skillReverse = ref({});
 
     const tagGroups = ref([
       {
@@ -694,13 +692,9 @@ export default {
 
         // 加载技能数据
         try {
-          const [skillsResp, reverseResp] = await Promise.all([
-            fetch('./data/skills.json'),
-            fetch('./data/skills-reverse.json')
-          ]);
+          const skillsResp = await fetch('./data/skills.json');
           skillData.value = await skillsResp.json();
-          skillReverse.value = await reverseResp.json();
-          console.log(`技能数据: ${Object.keys(skillData.value).length} 名干员, ${Object.keys(skillReverse.value).length} 个技能`);
+          console.log(`技能数据: ${Object.keys(skillData.value).length} 名干员`);
         } catch (err) {
           console.warn('技能数据加载失败:', err);
         }
@@ -787,37 +781,16 @@ export default {
         return false;
       });
       
-      // 猜技能模式
+      // 猜技能模式：只能输入干员名
       if (selectedTagGroup.value.id === 'skill') {
-        // 1) 输入的是干员名
-        if (guessedOp) {
-          guesses.value.push(guessedOp);
-          if (guessedOp.干员 === targetOperator.value?.干员) {
-            gameWon.value = true;
-          }
-        } else {
-          // 2) 检查是不是当前目标干员的技能名
-          const targetSkills = skillData.value[targetOperator.value?.干员];
-          const isTargetSkill = targetSkills?.some(s => s.技能名 === sanitizedName);
-          if (isTargetSkill) {
-            guesses.value.push(targetOperator.value);
-            gameWon.value = true;
-          } else if (skillReverse.value[sanitizedName]) {
-            // 3) 是其他干员的技能名
-            const ownerName = skillReverse.value[sanitizedName];
-            const ownerOp = filteredOperators.value.find(o => o.干员 === ownerName);
-            if (ownerOp) {
-              guesses.value.push(ownerOp);
-            } else {
-              showToast(`未找到技能所属干员: ${ownerName}`);
-              return;
-            }
-          } else {
-            showToast(`未找到干员或技能: ${sanitizedName}`);
-            return;
-          }
+        if (!guessedOp) {
+          showToast(`未找到干员: ${sanitizedName}`);
+          return;
         }
-
+        guesses.value.push(guessedOp);
+        if (guessedOp.干员 === targetOperator.value?.干员) {
+          gameWon.value = true;
+        }
         if (guesses.value.length >= maxGuesses.value && !gameWon.value) {
           gameOver.value = true;
         }
@@ -967,7 +940,6 @@ export default {
 
       // 猜技能模式数据
       skillData,
-      skillReverse,
 
       // 挑战模式
       isInChallengeMode,

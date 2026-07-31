@@ -280,10 +280,6 @@ export default {
       type: Object,
       default: null
     },
-    skillReverse: {
-      type: Object,
-      default: null
-    },
     availableModes: {
       type: Array,
       default: () => [
@@ -447,7 +443,7 @@ export default {
 
       const mode = challengeSettings.value.gameMode;
 
-      // 猜技能模式：支持技能名匹配
+      // 猜技能模式：只能输入干员名
       if (mode === 'skill') {
         const guessedOp = props.operators.find(op => {
           if (op.干员 === operatorName) return true;
@@ -462,20 +458,6 @@ export default {
             gameWon.value = true;
             questionComplete(true);
             return;
-          }
-        } else {
-          const target = currentQuestion.value.targetOperator;
-          const targetSkills = props.skillData?.[target.干员];
-          if (targetSkills?.some(s => s.技能名 === operatorName)) {
-            currentGuesses.value.push(target);
-            gameWon.value = true;
-            questionComplete(true);
-            return;
-          }
-          if (props.skillReverse?.[operatorName]) {
-            const ownerName = props.skillReverse[operatorName];
-            const ownerOp = props.operators.find(o => o.干员 === ownerName);
-            if (ownerOp) currentGuesses.value.push(ownerOp);
           }
         }
 

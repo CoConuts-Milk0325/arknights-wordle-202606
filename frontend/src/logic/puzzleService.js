@@ -31,8 +31,8 @@ export function getAvailableArts(operator, includeSkins = true) {
     const arts = [];
     // 基本立绘
     arts.push(`立绘_${operator.干员}_1.png`);
-    // 若星级 >= 3 则加立绘_2
-    if ((operator.星级 || 0) >= 3) {
+    // 若星级 >= 4 则加立绘_2（四星及以上才有精二立绘，三星无法精二）
+    if ((operator.星级 || 0) >= 4) {
         arts.push(`立绘_${operator.干员}_2.png`);
     }
     // 皮肤 (1..10)
