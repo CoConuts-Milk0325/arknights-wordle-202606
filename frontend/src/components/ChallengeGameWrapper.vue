@@ -24,7 +24,6 @@
         :gameSessionId="`challenge_${question.id}`"
         :puzzleHintInterval="3"
         :include-skin-arts="settings.includeSkinArts"
-        :preloadedAssets="preloadedAssets"
         class="challenge-puzzle-board"
       />
     </div>
@@ -40,6 +39,7 @@
         :game-session-id="`challenge_${question.id}`"
         :puzzle-hint-interval="3"
         :include-skin-arts="settings.includeSkinArts"
+        :preloaded-assets="preloadedAssets"
         :is-challenge="true"
         class="challenge-puzzle-board"
       />

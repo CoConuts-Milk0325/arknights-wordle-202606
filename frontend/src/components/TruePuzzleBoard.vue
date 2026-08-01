@@ -171,7 +171,8 @@ export default {
       loadingStatus.value = '正在选择立绘...';
       loadingProgress.value = 5;
 
-      const art = selectRandomArt(props.targetOperator, props.gameSessionId, props.includeSkinArts);
+      // 优先使用预加载时选定的立绘（挑战模式），否则随机选择
+      const art = props.preloadedAssets?.selectedArt || selectRandomArt(props.targetOperator, props.gameSessionId, props.includeSkinArts);
       if (!art) return;
       selectedArt.value = art;
 
@@ -179,6 +180,8 @@ export default {
       loadingProgress.value = 15;
 
       const url = getImagePath(art);
+      // PRTS CDN 实测支持 CORS（Access-Control-Allow-Origin: *），优先用 crossOrigin 加载，
+      // 保证 canvas 可读像素、裁剪中心能避开透明区域；个别资源异常时回退为不带 crossOrigin 再试一次
       let img = new Image();
       img.crossOrigin = 'anonymous';
       try {

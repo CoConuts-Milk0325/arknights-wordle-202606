@@ -1,9 +1,7 @@
 // 挑战模式相关逻辑和服务
 
 import { selectRandomOperator } from './gameLogic';
-import { loadPuzzleImage, getAvailableArts } from './puzzleService';
-import { getImagePath } from '../utils/imageUtils';
-import { imagePreloader } from '../utils/imagePreloader';
+import { loadPuzzleImage } from './puzzleService';
 
 /**
  * 生成挑战题目
@@ -69,13 +67,16 @@ export async function generateChallengeQuestions(operators, settings, progressCa
       questionIndex: i
     };
     
-    // 如果是小头/真·小头模式，预加载图片
-    if (gameMode === 'puzzle' || gameMode === 'truePuzzle') {
+    // 小头/真·小头模式：折中方案只预加载第 1 题，
+    // 后续题目由 ChallengeBoard 在答题期间逐题后台预加载（lookahead=1）
+    if ((gameMode === 'puzzle' || gameMode === 'truePuzzle') && i === 0) {
       try {
-        const preloadResult = await preloadPuzzleAssets(targetOperator, `challenge_q${i + 1}`, settings.includeSkinArts);
+        // sessionId 与 ChallengeGameWrapper 传入组件的 gameSessionId 保持一致，
+        // 保证 selectRandomArt / integralCache 在组件加载时能命中预加载结果
+        const preloadResult = await preloadPuzzleAssets(targetOperator, `challenge_${question.id}`, settings.includeSkinArts);
         question.puzzleAssets = preloadResult;
       } catch (error) {
-        console.warn(`预加载题目 ${i + 1} 的图片失败:`, error);
+        console.warn(`预加载第 1 题的图片失败:`, error);
         // 继续生成题目，但不包含预加载资源
       }
     }
@@ -94,7 +95,7 @@ export async function generateChallengeQuestions(operators, settings, progressCa
  * @param {string} sessionId - 会话ID
  * @returns {Promise<Object>} 预加载结果
  */
-async function preloadPuzzleAssets(operator, sessionId, includeSkinArts = true) {
+export async function preloadPuzzleAssets(operator, sessionId, includeSkinArts = true) {
   try {
     // 加载拼图图片
     const puzzleResult = await loadPuzzleImage(

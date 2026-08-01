@@ -256,8 +256,8 @@
 </template>
 
 <script>
-import { ref, computed, onBeforeUnmount } from 'vue';
-import { generateChallengeQuestions, calculateChallengeScore } from '../logic/challengeService';
+import { ref, computed, onBeforeUnmount, nextTick } from 'vue';
+import { generateChallengeQuestions, calculateChallengeScore, preloadPuzzleAssets } from '../logic/challengeService';
 import { compareOperators } from '../logic/gameLogic';
 import { achievementChecker } from '../logic/achievementChecker';
 import { achievementEmitter } from '../utils/achievementEmitter';
@@ -383,6 +383,11 @@ export default {
         challengeScore.value = 0;
         challengeResults.value = [];
         
+        // 进度条走满后再进入游戏，避免进度未到 100% 就切换
+        preparingProgress.value = 100;
+        await nextTick();
+        await new Promise(resolve => setTimeout(resolve, 300));
+        
         // 开始第一题
         challengePhase.value = 'playing';
         challengeStartTime.value = Date.now();
@@ -405,12 +410,31 @@ export default {
       }
     };
 
+    // 答题期间后台预加载下一题（lookahead=1），不阻塞当前题
+    const preloadNextQuestionAssets = (questionIndex) => {
+      const nextQuestion = challengeQuestions.value[questionIndex];
+      if (!nextQuestion || nextQuestion.puzzleAssets) return;
+      if (nextQuestion.gameMode !== 'puzzle' && nextQuestion.gameMode !== 'truePuzzle') return;
+
+      preloadPuzzleAssets(nextQuestion.targetOperator, `challenge_${nextQuestion.id}`, challengeSettings.value.includeSkinArts)
+        .then((result) => {
+          nextQuestion.puzzleAssets = result;
+          console.log(`预加载下一题(${nextQuestion.id})完成: ${nextQuestion.targetOperator.干员}`);
+        })
+        .catch((error) => {
+          console.warn(`预加载下一题(${nextQuestion.id})失败:`, error);
+        });
+    };
+
     // 开始单题
     const startQuestion = () => {
       if (currentQuestionIndex.value >= challengeQuestions.value.length) {
         finishChallenge();
         return;
       }
+
+      // 折中方案：答题期间后台预加载下一题资源
+      preloadNextQuestionAssets(currentQuestionIndex.value + 1);
       
       currentQuestion.value = challengeQuestions.value[currentQuestionIndex.value];
       currentGuesses.value = [];

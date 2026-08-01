@@ -430,9 +430,6 @@ import { getCurrentTheme, setTheme } from './themes';
 import { createErrorBoundary } from './utils/errorHandler';
 import ErrorToast from './components/ErrorToast.vue';
 import { InputValidator } from './utils/validator';
-import { imagePreloader } from './utils/imagePreloader';
-import { getImagePath } from './utils/imageUtils';
-import { getAvailableArts } from './logic/puzzleService';
 import { RARITY_COLORS } from './config/constants';
 
 export default {
@@ -546,44 +543,9 @@ export default {
         selectedTagGroup.value = group;
         resetGame();
         
-        // 如果切换到小头/真·小头模式，启动预加载
-        if (groupId === 'puzzle' || groupId === 'truePuzzle') {
-          startPuzzlePreloading();
-        }
       }
     };
 
-    // 预加载小头模式图片
-    const startPuzzlePreloading = async () => {
-      if (filteredOperators.value.length === 0) return;
-      
-      try {
-        console.log('开始预加载小头模式图片...');
-        
-        // 选择一些高频干员进行预加载（6星干员优先）
-        const operatorsToPreload = filteredOperators.value
-          .filter(op => op.星级 >= 5) // 5星及以上
-          .slice(0, 5); // 减少预加载数量
-
-        const urlsToPreload = [];
-
-        for (const operator of operatorsToPreload) {
-          const arts = getAvailableArts(operator, includeSkinArts.value);
-          // 每个干员预加载1张立绘
-          const artToPreload = arts.slice(0, 1);
-          for (const artFile of artToPreload) {
-            urlsToPreload.push(getImagePath(artFile));
-          }
-        }
-        
-        // 批量预加载，低优先级避免影响当前游戏
-        await imagePreloader.preloadBatch(urlsToPreload, 2);
-        console.log(`预加载完成，共加载 ${urlsToPreload.length} 张图片`);
-        
-      } catch (error) {
-        console.warn('预加载失败:', error);
-      }
-    };
 
     // 初始化 & 加载数据
     onMounted(async () => {

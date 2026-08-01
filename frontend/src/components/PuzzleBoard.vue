@@ -235,7 +235,6 @@ export default {
     const areaRefinementLevels = ref({});
     const mosaicCanvas = ref(null);
     const initialViewportWidth = ref(window.innerWidth);
-    const preloadedImage = ref(null); // 缓存预加载的图片
     
     // 用于防止竞态条件的组件实例ID和操作标识
     const componentId = ref(`puzzle_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`);
@@ -467,15 +466,6 @@ export default {
         integralData.value = result.integralData;
         originalImageData.value = result.originalImageData; // 存储原始图像数据
         
-        // 预加载并缓存图片，避免在显示答案时重新加载
-        if (result.puzzleImageUrl) {
-          const img = new Image();
-          img.onload = () => {
-            preloadedImage.value = img;
-            console.log(`[${componentId.value}] 图片已预加载到缓存`);
-          };
-          img.src = result.puzzleImageUrl;
-        }
         
         console.log(`[${componentId.value}] 已加载干员 ${result.operatorName} 的立绘: ${result.selectedArt}`);
 
