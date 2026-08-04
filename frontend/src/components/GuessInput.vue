@@ -103,6 +103,7 @@ import { ref, computed, watch, onMounted, onBeforeUnmount, nextTick } from 'vue'
 import { getOperatorAvatarFile, getImagePath, getRarityColor } from '../utils/imageUtils';
 import { pinyinCache } from '../utils/pinyinCache';
 import { InputValidator, debounce } from '../utils/validator';
+import { normalizeOperatorName } from '../utils/nameUtils';
 
 export default {
   name: 'GuessInput',
@@ -139,6 +140,7 @@ export default {
     const searchOperators = (term) => {
       if (!term.trim()) return [];
       const searchLower = term.toLowerCase().trim();
+      const searchClean = normalizeOperatorName(searchLower);
       const results = [];
 
       // 创建已猜测干员名称的Set，用于快速查找
@@ -154,20 +156,20 @@ export default {
         
         const nameLower = op.干员.toLowerCase();
         // 创建不含特殊字符的版本用于匹配
-        const nameClean = op.干员.replace(/[·\u00B7\u2022\u2027]/g, '').toLowerCase();
+        const nameClean = normalizeOperatorName(op.干员).toLowerCase();
         
         // 1. 精确匹配优先级最高
-        if (nameLower === searchLower || nameClean === searchLower) {
+        if (nameLower === searchLower || nameClean === searchClean) {
           matched = true;
           matchScore = 1000;
         }
         // 2. 名称开头匹配
-        else if (nameLower.startsWith(searchLower) || nameClean.startsWith(searchLower)) {
+        else if (nameLower.startsWith(searchLower) || nameClean.startsWith(searchClean)) {
           matched = true;
           matchScore = 900;
         }
         // 3. 名称包含匹配
-        else if (nameLower.includes(searchLower) || nameClean.includes(searchLower)) {
+        else if (nameLower.includes(searchLower) || nameClean.includes(searchClean)) {
           matched = true;
           matchScore = 800;
         }
@@ -385,8 +387,10 @@ export default {
     };
 
     const isGuessedOperator = (operatorName) => {
-      const guessedNames = new Set(props.guessedOperators.map(op => op.干员 || op));
-      return guessedNames.has(operatorName.trim());
+      const guessedNames = props.guessedOperators.map(op => op.干员 || op);
+      if (guessedNames.includes(operatorName.trim())) return true;
+      const normalizedName = normalizeOperatorName(operatorName);
+      return guessedNames.some(name => normalizeOperatorName(name) === normalizedName);
     };
 
     const containerRef = ref(null);

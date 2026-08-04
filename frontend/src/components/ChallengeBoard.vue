@@ -262,6 +262,7 @@ import { compareOperators } from '../logic/gameLogic';
 import { achievementChecker } from '../logic/achievementChecker';
 import { achievementEmitter } from '../utils/achievementEmitter';
 import { RARITY_COLORS } from '../config/constants';
+import { normalizeOperatorName } from '../utils/nameUtils';
 import ChallengeResult from './ChallengeResult.vue';
 import ChallengeGameWrapper from './ChallengeGameWrapper.vue';
 
@@ -471,7 +472,7 @@ export default {
       if (mode === 'skill') {
         const guessedOp = props.operators.find(op => {
           if (op.干员 === operatorName) return true;
-          const normalize = (n) => n.replace(/[\u00B7\u2022\u2027\u00B2]/g, '').replace(/\u00B2/g, '2');
+          const normalize = (n) => normalizeOperatorName(n).replace(/\u00B2/g, '2');
           if (normalize(op.干员) === normalize(operatorName)) return true;
           return false;
         });
@@ -493,7 +494,7 @@ export default {
       }
 
       // 找到猜测的干员 - 增强查找逻辑
-      const normalizeName = (n) => n.replace(/[\u00B7\u2022\u2027]/g, '');
+      const normalizeName = (n) => normalizeOperatorName(n);
       const guessedOp = props.operators.find(op => {
         if (op.干员 === operatorName) return true;
         if (normalizeName(op.干员) === normalizeName(operatorName)) return true;

@@ -1,6 +1,7 @@
 // 挑战模式相关逻辑和服务
 
 import { selectRandomOperator } from './gameLogic';
+import { normalizeOperatorName } from '../utils/nameUtils';
 import { loadPuzzleImage } from './puzzleService';
 
 /**
@@ -42,7 +43,7 @@ export async function generateChallengeQuestions(operators, settings, progressCa
     
     // 第一题：如果 URL 参数指定了干员且可用，优先使用
     if (i === 0 && forceTargetParams) {
-      const found = availableOperators.find(op => op.干员 === forceTargetParams);
+      const found = availableOperators.find(op => op.干员 === forceTargetParams || normalizeOperatorName(op.干员) === normalizeOperatorName(forceTargetParams));
       if (found && !usedOperators.has(found.干员)) {
         targetOperator = found;
         console.log(`[调试] 挑战模式URL参数强制目标干员: ${found.干员}`);

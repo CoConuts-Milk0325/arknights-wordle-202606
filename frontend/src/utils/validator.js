@@ -58,7 +58,7 @@ export class InputValidator {
     }
 
     if (allowSpecialChars) {
-      allowedPattern += '\\-_\\.²';
+      allowedPattern += '\\-_\\.²()（）';
     }
 
     if (allowedPattern) {

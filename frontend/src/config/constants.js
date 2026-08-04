@@ -44,6 +44,10 @@ export const GAME_CONFIG = {
   }
 };
 
+// PRTS 上不存在精一立绘（立绘_干员名_1.png）的干员，仅有精二立绘与皮肤。
+// 目前仅两位异格阿米娅：阿米娅(近卫)、阿米娅(医疗)。
+// 若后续新增同类干员，需要同步补充该名单。
+export const NO_ELITE1_ART_OPERATORS = new Set(['阿米娅(近卫)', '阿米娅(医疗)']);
 export const PUZZLE_CONFIG = {
   // 谜题基本设置
   DEFAULT_GRID_SIZE: { rows: 4, cols: 4 },

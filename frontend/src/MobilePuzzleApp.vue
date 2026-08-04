@@ -146,6 +146,7 @@ import { loadOperatorsData } from './utils/dataLoader';
 import { selectRandomOperator, preprocessOperators } from './logic/gameLogic';
 import { getOperatorAvatarFile, getImagePath } from './utils/imageUtils';
 import { getAvailableArts } from './logic/puzzleService';
+import { normalizeOperatorName } from './utils/nameUtils';
 import GuessInput from './components/GuessInput.vue';
 import PuzzleBoard from './components/PuzzleBoard.vue';
 
@@ -412,7 +413,7 @@ export default {
       const forceTarget = params.get('target');
       if (forceTarget) {
         // 直接用 operators 查找，避免 filteredOperators computed 缓存问题
-        const targetOp = operators.value.find(op => op.干员 === forceTarget);
+        const targetOp = operators.value.find(op => op.干员 === forceTarget || normalizeOperatorName(op.干员) === normalizeOperatorName(forceTarget));
         if (targetOp) {
           console.log(`[调试] URL参数强制目标干员: ${targetOp.干员}`);
           targetOperator.value = targetOp;
@@ -435,7 +436,7 @@ export default {
       // 查找干员
       const guessedOperator = operators.value.find(op => 
         op.干员 === operatorName || 
-        op.干员.replace(/[·\u00B7\u2022\u2027]/g, '') === operatorName.replace(/[·\u00B7\u2022\u2027]/g, '')
+        normalizeOperatorName(op.干员) === normalizeOperatorName(operatorName)
       );
       
       if (!guessedOperator) {

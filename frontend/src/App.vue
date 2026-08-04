@@ -430,6 +430,7 @@ import { getCurrentTheme, setTheme } from './themes';
 import { createErrorBoundary } from './utils/errorHandler';
 import ErrorToast from './components/ErrorToast.vue';
 import { InputValidator } from './utils/validator';
+import { normalizeOperatorName } from './utils/nameUtils';
 import { RARITY_COLORS } from './config/constants';
 
 export default {
@@ -692,7 +693,7 @@ export default {
         if (operatorData.value.length === 0) return;
         
         // 直接用 operatorData 查找，避免 filteredOperators computed 缓存问题
-        const targetOp = operatorData.value.find(op => op.干员 === forceTarget);
+        const targetOp = operatorData.value.find(op => op.干员 === forceTarget || normalizeOperatorName(op.干员) === normalizeOperatorName(forceTarget));
         if (targetOp) {
           console.log(`[调试] URL参数强制目标干员: ${targetOp.干员}`);
           targetOperator.value = targetOp;
@@ -736,9 +737,7 @@ export default {
         if (op.干员 === sanitizedName) return true;
         
         // 2. 清理特殊字符后匹配
-        const cleanOpName = op.干员.replace(/[·\u00B7\u2022\u2027]/g, '');
-        const cleanInputName = sanitizedName.replace(/[·\u00B7\u2022\u2027]/g, '');
-        if (cleanOpName === cleanInputName) return true;
+        if (normalizeOperatorName(op.干员) === normalizeOperatorName(sanitizedName)) return true;
         
         return false;
       });

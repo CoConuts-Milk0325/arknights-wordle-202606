@@ -6,6 +6,7 @@ import {
     extractDominantColors
 } from './advancedColorExtraction';
 import { getCurrentConfig } from '../config/renderingConfig';
+import { NO_ELITE1_ART_OPERATORS } from '../config/constants';
 
 // 图像缓存
 const imageCache = new Map();
@@ -29,8 +30,10 @@ function addToCache(cache, key, value) {
  */
 export function getAvailableArts(operator, includeSkins = true) {
     const arts = [];
-    // 基本立绘
-    arts.push(`立绘_${operator.干员}_1.png`);
+    // 基本立绘（个别干员在 PRTS 上没有精一立绘，例如阿米娅(近卫)/阿米娅(医疗)）
+    if (!NO_ELITE1_ART_OPERATORS.has(operator.干员)) {
+        arts.push(`立绘_${operator.干员}_1.png`);
+    }
     // 若星级 >= 4 则加立绘_2（四星及以上才有精二立绘，三星无法精二）
     if ((operator.星级 || 0) >= 4) {
         arts.push(`立绘_${operator.干员}_2.png`);

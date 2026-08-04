@@ -17,6 +17,7 @@ class PinyinCache {
       .replace(/\u00B7/g, '') // 移除Unicode中点符号
       .replace(/\u2022/g, '') // 移除项目符号
       .replace(/\u2027/g, '') // 移除连字符点
+      .replace(/[()（）]/g, '') // 移除半角/全角括号
       .replace(/\s+/g, '') // 移除多余空格
       .trim();
   }

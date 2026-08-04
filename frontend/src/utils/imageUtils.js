@@ -1,5 +1,6 @@
 // utils/imageUtils.js
 import MD5 from "md5";
+import { NO_ELITE1_ART_OPERATORS } from '../config/constants';
 
 export const MEDIA_ENDPOINT = "https://media.prts.wiki";
 
@@ -56,8 +57,10 @@ export function getOperatorLihuiList(operator) {
   const rarity = parseInt(operator.稀有度, 10) || 0;
   const baseList = [];
 
-  // 精英1一定有
-  baseList.push(`立绘_${operator.干员}_1.png`);
+  // 精英1通常都有，但个别干员（阿米娅(近卫)/阿米娅(医疗)）在 PRTS 上不存在精一立绘
+  if (!NO_ELITE1_ART_OPERATORS.has(operator.干员)) {
+    baseList.push(`立绘_${operator.干员}_1.png`);
+  }
 
   // 如果稀有度 >= 3，可能有精英2
   if (rarity >= 3) {
