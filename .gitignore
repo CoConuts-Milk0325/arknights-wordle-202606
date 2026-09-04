@@ -94,3 +94,4 @@ temp/
 bundle-analyzer-report.html
 # Visual companion temp files
 .superpowers/
+.reasonix/

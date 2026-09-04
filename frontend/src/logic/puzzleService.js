@@ -152,7 +152,6 @@ export async function loadPuzzleImage(operator, maxWidth = 600, maxHeight = 600,
         const { scaledW, scaledH } = calcScaledDimensions(imgWidth, imgHeight, maxWidth, maxHeight, initialViewportWidth);
 
         // 优化：根据设备性能调整处理尺寸
-        const devicePixelRatio = window.devicePixelRatio || 1;
         const performanceLevel = getDevicePerformanceLevel();
         let shrinkLimit = 800;
         
@@ -588,7 +587,7 @@ export function refineRandomBlocks(
 /**
  * 根据当前 blocks，使用纯色填充绘制马赛克
  */
-export function renderMosaic(ctx, blocks, integralData, scaledWidth, scaledHeight, gameLevel = 1) {
+export function renderMosaic(ctx, blocks, integralData, scaledWidth, scaledHeight) {
     ctx.clearRect(0, 0, scaledWidth, scaledHeight);
     
     blocks.forEach(block => {

@@ -15,7 +15,6 @@ function createIntegralImage(imageData) {
   const alphaCount = new Uint32Array(totalPixels);
 
   // 性能优化：预计算一些值
-  const dataLength = data.length;
 
   for (let y = 0; y < height; y++) {
     let rowSumR = 0, rowSumG = 0, rowSumB = 0, rowAlphaCount = 0;

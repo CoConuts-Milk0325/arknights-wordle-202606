@@ -102,7 +102,6 @@
 import { ref, computed, watch, onMounted, onBeforeUnmount, nextTick } from 'vue';
 import { getOperatorAvatarFile, getImagePath, getRarityColor } from '../utils/imageUtils';
 import { pinyinCache } from '../utils/pinyinCache';
-import { InputValidator, debounce } from '../utils/validator';
 import { normalizeOperatorName } from '../utils/nameUtils';
 
 export default {

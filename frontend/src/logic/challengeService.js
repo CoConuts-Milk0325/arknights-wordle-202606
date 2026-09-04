@@ -134,7 +134,7 @@ export async function preloadPuzzleAssets(operator, sessionId, includeSkinArts =
 export function calculateChallengeScore(isCorrect, timeUsed, guessCount, settings) {
   if (!isCorrect) return 0;
   
-  const { timePerQuestion, maxGuesses } = settings;
+  const { maxGuesses } = settings;
   
   // 基础分数
   let baseScore = 1000;
@@ -286,7 +286,7 @@ function calculateRanking(totalScore, settings) {
  * @returns {string} 分享码
  */
 export function generateShareCode(challengeData) {
-  const { settings, results } = challengeData;
+  const { settings } = challengeData;
   
   // 构建分享数据
   const shareData = {

@@ -88,7 +88,7 @@ export class AchievementChecker {
   }
 
   // 完成题目
-  completeQuestion(timeUsed, guessCount) {
+  completeQuestion(timeUsed) {
     this.stats.totalQuestions++;
     this.stats.totalTime += timeUsed;
     

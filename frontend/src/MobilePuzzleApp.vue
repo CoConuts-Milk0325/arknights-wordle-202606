@@ -258,7 +258,7 @@ export default {
     };
 
     // 专门为移动端拼图模式设计的立绘选择函数
-    const selectPuzzleArt = (operator, gameSessionId) => {
+    const selectPuzzleArt = (operator) => {
       const list = getAvailableArts(operator);
       console.log(`[BW] ${operator.干员} 所有可用立绘:`, list);
       

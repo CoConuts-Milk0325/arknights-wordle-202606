@@ -71,14 +71,14 @@ export async function loadOperatorsData(filePath = './data/operators.json') {
  * 从字符串生成干员拼音首字母索引 (可选)
  * 不改也行
  */
-export function generatePinyinIndex(operators) {
+export function generatePinyinIndex() {
   return {};
 }
 
 /**
  * 根据条件过滤干员数据 (可选)
  */
-export function filterOperators(operators, filters) {
+export function filterOperators(operators) {
   // ...
   return operators;
 }

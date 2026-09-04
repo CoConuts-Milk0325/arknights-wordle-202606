@@ -239,7 +239,6 @@ export default {
     // 用于防止竞态条件的组件实例ID和操作标识
     const componentId = ref(`puzzle_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`);
     let currentInitPromise = null;
-    let currentTargetOperator = null;
     let initTimeout = null;
     const retryCount = ref(0);
     const MAX_RETRIES = 2;
@@ -352,7 +351,6 @@ export default {
         
         if (newVal && newVal.干员) {
           console.log(`[${componentId.value}] 目标干员变更为:`, newVal.干员);
-          currentTargetOperator = newVal;
           // 重新生成提示列表
           puzzleHints.value = generatePuzzleHints();
           await initPuzzle();
@@ -381,7 +379,7 @@ export default {
     // 如果在猜的过程中直接 gameOver 或 guessCorrect，需要触发一次渲染
     watch(
       () => [props.gameOver, props.gameWon, props.userGaveUp],
-      async ([over, won, gaveUp], [oldOver, oldWon, oldGaveUp]) => {
+      async () => {
         // 只要状态变化，就刷新一下
         if (!loadingImage.value) {
           await nextTick();

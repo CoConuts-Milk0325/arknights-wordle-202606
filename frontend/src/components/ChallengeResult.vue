@@ -138,7 +138,7 @@ export default {
     }
   },
   emits: ['restart', 'back'],
-  setup(props, { emit }) {
+  setup(props) {
     const achievements = ref([]);
 
     // 计算最终统计

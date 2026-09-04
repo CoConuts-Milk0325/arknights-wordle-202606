@@ -292,7 +292,7 @@ export default {
     }
   },
   emits: ['back'],
-  setup(props, { emit }) {
+  setup(props) {
     // 挑战状态
     const challengePhase = ref('setup'); // setup, preparing, playing, result
     const rarityColors = RARITY_COLORS;
@@ -622,14 +622,7 @@ export default {
 
 
 
-    // 获取模式标签
-    const getModeTags = (mode) => {
-      const modeMap = {
-        easy: ['性别', '星级', '职业', '国家', '种族', '源石技艺适应性', '身高', '感染状态', '出生日期', '标签'],
-        hard: ['星级', '满级攻击', '满级生命', '满级防御', '满级法术抗性', '攻击间隔', '上线年份', '标签']
-      };
-      return modeMap[mode] || [];
-    };
+
 
     // 获取模式显示名称
     const getModeDisplayName = (mode) => {
