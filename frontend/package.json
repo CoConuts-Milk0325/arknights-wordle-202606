@@ -5,7 +5,8 @@
     "scripts": {
         "serve": "vue-cli-service serve",
         "build": "vue-cli-service build",
-        "lint": "vue-cli-service lint"
+        "lint": "vue-cli-service lint",
+        "test:egg": "node --loader ./scripts/esm-loader.mjs ./scripts/verify-challenge-egg.mjs"
     },
     "dependencies": {
         "core-js": "^3.8.3",

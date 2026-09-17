@@ -4,6 +4,28 @@ import { selectRandomOperator } from './gameLogic';
 import { normalizeOperatorName } from '../utils/nameUtils';
 import { loadPuzzleImage } from './puzzleService';
 
+// 仅用于挑战出题：两组干员互相触发下一题的概率彩蛋。
+export const CHALLENGE_FOLLOW_UPS = {
+  '德克萨斯': ['拉普兰德', '荒芜拉普兰德'],
+  '缄默德克萨斯': ['拉普兰德', '荒芜拉普兰德'],
+  '拉普兰德': ['德克萨斯', '缄默德克萨斯'],
+  '荒芜拉普兰德': ['德克萨斯', '缄默德克萨斯']
+};
+
+export function selectFollowUpOperator(remainingOperators, preferredNames) {
+  const roll = Math.random();
+  const preferredName = roll < 0.3
+    ? preferredNames[0]
+    : roll < 0.6 ? preferredNames[1] : null;
+  const preferredOperator = remainingOperators.find(op => op.干员 === preferredName);
+  if (preferredOperator) return preferredOperator;
+
+  // 指定干员被筛除或已经出现时，该份概率转给“其他”，不转给另一位。
+  const otherOperators = remainingOperators.filter(op => !preferredNames.includes(op.干员));
+  // 极小候选池没有“其他”时仍优先保证答案可用且不重复。
+  return selectRandomOperator(otherOperators.length ? otherOperators : remainingOperators);
+}
+
 /**
  * 生成挑战题目
  * @param {Array} operators - 可用干员列表
@@ -29,6 +51,7 @@ export async function generateChallengeQuestions(operators, settings, progressCa
   
   const questions = [];
   const usedOperators = new Set();
+  let pendingFollowUp = null;
   
   progressCallback(0.1);
   
@@ -40,6 +63,8 @@ export async function generateChallengeQuestions(operators, settings, progressCa
   // 生成题目
   for (let i = 0; i < questionCount; i++) {
     let targetOperator;
+    const remainingOperators = availableOperators.filter(op => !usedOperators.has(op.干员));
+    const isFollowUpQuestion = pendingFollowUp !== null;
     
     // 第一题：如果 URL 参数指定了干员且可用，优先使用
     if (i === 0 && forceTargetParams) {
@@ -52,14 +77,18 @@ export async function generateChallengeQuestions(operators, settings, progressCa
       }
     }
     
-    // 如果没指定强制目标或不可用，随机选择（不重复）
+    // 先排除整场已出现的答案，再应用概率；所有挑战玩法共用此逻辑。
     if (!targetOperator) {
-      do {
-        targetOperator = selectRandomOperator(availableOperators);
-      } while (usedOperators.has(targetOperator.干员));
+      targetOperator = isFollowUpQuestion
+        ? selectFollowUpOperator(remainingOperators, pendingFollowUp)
+        : selectRandomOperator(remainingOperators);
     }
     
     usedOperators.add(targetOperator.干员);
+    // 受彩蛋影响的题目无论抽到谁都不能继续触发；状态只存在于本场挑战。
+    pendingFollowUp = isFollowUpQuestion
+      ? null
+      : CHALLENGE_FOLLOW_UPS[targetOperator.干员] || null;
     
     const question = {
       id: `q_${i + 1}`,
